@@ -47,9 +47,15 @@ const std::string V_CMD_DESC = "[V]erbose: Toggle verbose mode. Start in non-ver
         "At all times, output each transaction number as it is read in, followed by a colon, a space, and the result\n"
         "(“good” or “bad”).\n";
 
-const std::string PROMPT_HELP = "type h or H for a list of available commands";
+const std::string PROMPT_HELP = "type H or h for a list of available commands";
+
+const std::string PROMPT_INTERACTION = "Interactive mode activated:\n"
+                                        "\t-Type a command.\n"
+                                        "\t-Type H or h for a list of commands.\n"
+                                        "\t-Type I or i to exit interactive mode.\n";
 
 void help();
 void promptHelp(std::string);
+void promptInteraction(bool);
 
 #endif
