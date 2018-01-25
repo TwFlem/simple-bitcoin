@@ -54,7 +54,6 @@ const std::string PROMPT_INTERACTION = "Interactive mode activated:\n"
                                         "\t-Type H or h for a list of commands.\n"
                                         "\t-Type I or i to exit interactive mode.\n";
 
-void help();
 void promptHelp(std::string);
 void promptInteraction(bool);
 

@@ -1,5 +1,6 @@
-#include "descriptions.h"
 #include <iostream>
+#include "descriptions.h"
+#include "ledgerCommands.h"
 
 using namespace std;
 
@@ -13,8 +14,7 @@ int main() {
         // why can't i do switch statements with strings!
         if (input == "H" || input == "h") {
             help();
-        }
-        if (input == "I" || input == "i") {
+        } else if (input == "I" || input == "i") {
             interactive = !interactive;
             promptInteraction(interactive);
         } else {

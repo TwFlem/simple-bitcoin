@@ -1,0 +1,6 @@
+#ifndef SIMPLE_BITCOIN_LEDGERCOMMANDS_H
+#define SIMPLE_BITCOIN_LEDGERCOMMANDS_H
+
+void help();
+
+#endif
