@@ -9,5 +9,12 @@ void promptHelp(std::string input) {
 
 void promptInteraction(bool interactive) {
     std::cout << std::endl;
-    if (interactive) std::cout << PROMPT_INTERACTION << std::endl;
+    if (interactive) std::cout << PROMPT_INTERACTION_ACTIVE << std::endl;
+    else std::cout << PROMPT_INTERACTION_NOT_ACTIVE << std::endl;
+}
+
+void promptVerbose(bool verbose) {
+    std::cout << std::endl;
+    if (verbose) std::cout << PROMPT_VERBOSE_ACTIVE << std::endl;
+    else std::cout << PROMPT_VERBOSE_NOT_ACTIVE << std::endl;
 }

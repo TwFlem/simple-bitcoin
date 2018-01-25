@@ -49,12 +49,19 @@ const std::string V_CMD_DESC = "[V]erbose: Toggle verbose mode. Start in non-ver
 
 const std::string PROMPT_HELP = "type H or h for a list of available commands";
 
-const std::string PROMPT_INTERACTION = "Interactive mode activated:\n"
+const std::string PROMPT_INTERACTION_ACTIVE = "Interactive mode activated:\n"
                                         "\t-Type a command.\n"
                                         "\t-Type H or h for a list of commands.\n"
                                         "\t-Type I or i to exit interactive mode.\n";
 
+const std::string PROMPT_INTERACTION_NOT_ACTIVE = "Interactive mode deactivated:\n";
+
+const std::string PROMPT_VERBOSE_ACTIVE = "Verbose mode activated:\n";
+
+const std::string PROMPT_VERBOSE_NOT_ACTIVE = "Verbose mode deactivated:\n";
+
 void promptHelp(std::string);
 void promptInteraction(bool);
+void promptVerbose(bool);
 
 #endif
