@@ -33,7 +33,7 @@ int main() {
         } else if (input == "F" || input == "f") {
             file(input, interactive, verbose);
         } else if (input == "T" || input == "t") {
-            transaction(input, interactive, verbose);
+            transaction(ledger, interactive, verbose);
         } else if (input == "P" || input == "p") {
             ledger->print();
         } else if (input == "D" || input == "d") {
@@ -55,11 +55,11 @@ void insertFakeTrans(Ledger* ledger) {
     vector <account> accounts;
 
     utxo tempU = {
-            12345,
+            "123",
             0
     };
     utxo tempV = {
-            12346,
+            "456",
             0
     };
 
@@ -82,14 +82,39 @@ void insertFakeTrans(Ledger* ledger) {
     accounts.push_back(tempB);
     accounts.push_back(tempC);
 
-    struct transaction trans = {
+    struct transaction trans1 = {
+            "1",
             utxos,
             accounts
     };
 
-    ledger->addTransaction(1, trans);
-    ledger->addTransaction(2, trans);
-    ledger->addTransaction(3, trans);
-    ledger->addTransaction(4, trans);
-    ledger->addTransaction(5, trans);
+    struct transaction trans2 = {
+            "2",
+            utxos,
+            accounts
+    };
+
+    struct transaction trans3 = {
+            "3",
+            utxos,
+            accounts
+    };
+
+    struct transaction trans4 = {
+            "4",
+            utxos,
+            accounts
+    };
+
+    struct transaction trans5 = {
+            "5",
+            utxos,
+            accounts
+    };
+
+    ledger->addTransaction(trans1);
+    ledger->addTransaction(trans2);
+    ledger->addTransaction(trans3);
+    ledger->addTransaction(trans4);
+    ledger->addTransaction(trans5);
 }

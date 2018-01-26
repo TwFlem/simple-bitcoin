@@ -5,7 +5,7 @@
 
 void help();
 void file(std::string, bool, bool);
-void transaction(std::string, bool, bool);
+void transaction(Ledger*, bool, bool);
 void dump(Ledger*, bool, bool);
 void wipe(bool, bool);
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include "ledgerCommands.h"
 #include "descriptions.h"
 #include "ledger.h"
@@ -18,11 +19,22 @@ void help() {
 }
 
 void file(string filename, bool interactive, bool verbose) {
-    cout << filename << endl;
+    ifstream file(filename);
+    string transactionStr;
+    while (getline(file, transactionStr)) {
+        parseTransaction(transactionStr);
+    }
 }
 
-void transaction(string input, bool interactive, bool verbose) {
-    cout << input << endl;
+void transaction(Ledger* ledger, bool interactive, bool verbose) {
+    string trans;
+
+    if (interactive) cout << "Enter a transaction to add to the ledger" << endl;
+
+    getline(cin, trans);
+
+    ledger->addTransaction(parseTransaction(trans));
+    ledger->print();
 }
 
 void dump(Ledger* ledger, bool interactive, bool verbose) {
