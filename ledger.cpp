@@ -29,6 +29,13 @@ string Ledger::getAllFmtTransactions() {
     return transactions;
 }
 
+void Ledger::wipe() {
+    std::vector<std::string> transactionKeys;
+    transactionMap transactions;
+    this->transactionKeys = transactionKeys;
+    this->transactions = transactions;
+}
+
 string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
     string transStr = "";
     transStr = transStr + transId + "; " + to_string(utxos.size()) + "; ";

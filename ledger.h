@@ -36,6 +36,7 @@ public:
     void addTransaction(transaction);
     void print();
     std::string getAllFmtTransactions();
+    void wipe();
 private:
     std::vector<std::string> transactionKeys;
     transactionMap transactions;

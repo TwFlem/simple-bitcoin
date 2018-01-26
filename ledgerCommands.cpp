@@ -55,7 +55,3 @@ void dump(Ledger* ledger, bool interactive, bool verbose) {
 
     ledgerFile.close();
 }
-
-void wipe(bool interactive, bool verbose) {
-    cout << "wipe called" << endl;
-}

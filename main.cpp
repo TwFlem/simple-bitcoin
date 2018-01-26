@@ -39,7 +39,7 @@ int main() {
         } else if (input == "D" || input == "d") {
             dump(ledger, interactive, verbose);
         } else if (input == "W" || input == "w") {
-            wipe(interactive, verbose);
+            ledger->wipe();
         } else {
             promptHelp(input);
         }
