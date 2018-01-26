@@ -7,6 +7,7 @@
 using namespace std;
 
 void insertFakeTrans(Ledger* ledger);
+
 int main() {
     Ledger* ledger = new Ledger();
     bool interactive = false;
@@ -14,7 +15,6 @@ int main() {
     string input;
 
     insertFakeTrans(ledger);
-    ledger->print();
 
     getline(cin, input);
 
@@ -35,9 +35,9 @@ int main() {
         } else if (input == "T" || input == "t") {
             transaction(input, interactive, verbose);
         } else if (input == "P" || input == "p") {
-            print();
+            ledger->print();
         } else if (input == "D" || input == "d") {
-            dump(input, interactive, verbose);
+            dump(ledger, interactive, verbose);
         } else if (input == "W" || input == "w") {
             wipe(interactive, verbose);
         } else {
@@ -51,7 +51,6 @@ int main() {
 }
 
 void insertFakeTrans(Ledger* ledger) {
-    unsigned int transId = 5678;
     vector <utxo> utxos;
     vector <account> accounts;
 
@@ -88,7 +87,9 @@ void insertFakeTrans(Ledger* ledger) {
             accounts
     };
 
-    ledger->addTransaction(transId, trans);
-    ledger->addTransaction(8567, trans);
-    ledger->addTransaction(967, trans);
+    ledger->addTransaction(1, trans);
+    ledger->addTransaction(2, trans);
+    ledger->addTransaction(3, trans);
+    ledger->addTransaction(4, trans);
+    ledger->addTransaction(5, trans);
 }

@@ -1,5 +1,5 @@
 #include "ledger.h"
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -10,15 +10,22 @@ using namespace std;
 Ledger::Ledger() {}
 
 void Ledger::addTransaction(unsigned int transId, transaction trans) {
+    this->transactionkeys.push_back(transId);
     this->transactions.insert(pair<unsigned int, transaction>(transId, trans));
 }
 
 void Ledger::print() {
-    for(auto const &entry : this->transactions) {
-        const unsigned int transId = entry.first;
-        const transaction trans = entry.second;
-        cout << fmtTrans(transId, trans.utxos, trans.accounts) << endl;
+    cout << endl;
+    cout << this->getAllFmtTransactions() << endl;
+}
+
+string Ledger::getAllFmtTransactions() {
+    string transactions = "";
+    for(auto const transId : this->transactionkeys) {
+        transaction trans = this->transactions.at(transId);
+        transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts) + "\n";
     }
+    return transactions;
 }
 
 string fmtTrans(unsigned int transId, vector<utxo> utxos, vector<account> accounts) {

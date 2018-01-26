@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
 
 struct utxo {
     unsigned int transactionId;
@@ -19,13 +21,18 @@ struct transaction {
 };
 
 class Ledger {
+
+typedef std::unordered_map<unsigned int, transaction> transactionMap;
+
 public:
     Ledger();
     Ledger(std::vector<transaction>);
     void addTransaction(unsigned int, transaction);
     void print();
+    std::string getAllFmtTransactions();
 private:
-    std::map<unsigned int, transaction> transactions;
+    std::vector<unsigned int> transactionkeys;
+    transactionMap transactions;
     transaction findTransaction(unsigned int);
 };
 
