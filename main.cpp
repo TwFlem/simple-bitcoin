@@ -1,14 +1,23 @@
 #include <iostream>
+#include <vector>
 #include "descriptions.h"
+#include "ledger.h"
 #include "ledgerCommands.h"
 
 using namespace std;
 
+void insertFakeTrans(Ledger* ledger);
 int main() {
+    Ledger* ledger = new Ledger();
     bool interactive = false;
     bool verbose = false;
     string input;
+
+    insertFakeTrans(ledger);
+    ledger->print();
+
     getline(cin, input);
+
 
     while(input != "E" && input != "e") {
 
@@ -39,4 +48,47 @@ int main() {
     }
 
     return 0;
+}
+
+void insertFakeTrans(Ledger* ledger) {
+    unsigned int transId = 5678;
+    vector <utxo> utxos;
+    vector <account> accounts;
+
+    utxo tempU = {
+            12345,
+            0
+    };
+    utxo tempV = {
+            12346,
+            0
+    };
+
+    account tempA = {
+            "lol",
+            12
+    };
+    account tempB = {
+            "lol1",
+            12
+    };
+    account tempC = {
+            "lol2",
+            12
+    };
+
+    utxos.push_back(tempU);
+    utxos.push_back(tempV);
+    accounts.push_back(tempA);
+    accounts.push_back(tempB);
+    accounts.push_back(tempC);
+
+    struct transaction trans = {
+            utxos,
+            accounts
+    };
+
+    ledger->addTransaction(transId, trans);
+    ledger->addTransaction(8567, trans);
+    ledger->addTransaction(967, trans);
 }
