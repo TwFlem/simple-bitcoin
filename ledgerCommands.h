@@ -4,7 +4,7 @@
 #include "ledger.h"
 
 void help();
-void file(std::string, bool, bool);
+void file(Ledger*, bool, bool);
 void transaction(Ledger*, bool, bool);
 void dump(Ledger*, bool, bool);
 

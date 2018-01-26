@@ -49,5 +49,6 @@ std::string extractId(int&, std::string, char);
 std::string extractPairCnt(int&, std::string, char);
 std::vector<utxo> extractUtxoPairs(int&, std::string, int);
 std::vector<account> extractAccountPairs(int&, std::string, int);
+void scanToDelim(int&, std::string, char);
 
 #endif //SIMPLE_BITCOIN_LEDGER_H

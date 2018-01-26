@@ -40,6 +40,8 @@ string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
     string transStr = "";
     transStr = transStr + transId + "; " + to_string(utxos.size()) + "; ";
 
+    if (utxos.size() == 0) transStr = transStr + "; ";
+
     for(int i = 0; i < utxos.size(); i++) {
         utxo currUtxo = utxos.at(i);
         transStr = transStr + "(" + currUtxo.transactionId + ", " + to_string(currUtxo.index) + ")";
@@ -86,17 +88,15 @@ transaction parseTransaction(string transStr) {
 
     utxoCnt = stoi(utxoCntStr);
 
-    utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
-    cout << "utxo pairs: " << utxos.at(0).transactionId << " " << utxos.at(0).index << endl;
+    if (utxoCnt == 0) {
+        scanToDelim(iterator, transStr, SEMI_COLON);
+        iterator++;
+    } else {
+        utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
+        cout << "utxo pairs: " << utxos.at(0).transactionId << " " << utxos.at(0).index << endl;
+    }
+    cout << "before extracted: " << transStr[iterator] << endl;
 
-    if (transId == "") {
-        cout << errTrans << endl;
-        return emptyTrans;
-    }
-    if (transId == "") {
-        cout << errTrans << endl;
-        return emptyTrans;
-    }
     string voutCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
     cout << "extracted: " << voutCntStr << endl;
 
@@ -264,4 +264,8 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
         }
     }
     return accounts;
+}
+
+void scanToDelim(int &i, string transStr, char endingDelim) {
+    while (transStr[i] != endingDelim) i++;
 }

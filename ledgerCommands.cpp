@@ -18,12 +18,21 @@ void help() {
     cout << V_CMD_DESC << endl;
 }
 
-void file(string filename, bool interactive, bool verbose) {
-    ifstream file(filename);
+void file(Ledger* ledger, bool interactive, bool verbose) {
+    string filename;
     string transactionStr;
+
+    if (interactive) cout << "Enter a filename to generate a ledger" << endl;
+
+    getline(cin, filename);
+
+    ifstream file(filename);
+
+
     while (getline(file, transactionStr)) {
-        parseTransaction(transactionStr);
+        ledger->addTransaction(parseTransaction(transactionStr));
     }
+    file.close();
 }
 
 void transaction(Ledger* ledger, bool interactive, bool verbose) {

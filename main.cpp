@@ -6,15 +6,11 @@
 
 using namespace std;
 
-void insertFakeTrans(Ledger* ledger);
-
 int main() {
     Ledger* ledger = new Ledger();
     bool interactive = false;
     bool verbose = false;
     string input;
-
-    insertFakeTrans(ledger);
 
     getline(cin, input);
 
@@ -31,7 +27,7 @@ int main() {
             verbose = !verbose;
             promptVerbose(verbose);
         } else if (input == "F" || input == "f") {
-            file(input, interactive, verbose);
+            file(ledger, interactive, verbose);
         } else if (input == "T" || input == "t") {
             transaction(ledger, interactive, verbose);
         } else if (input == "P" || input == "p") {
@@ -48,73 +44,4 @@ int main() {
     }
 
     return 0;
-}
-
-void insertFakeTrans(Ledger* ledger) {
-    vector <utxo> utxos;
-    vector <account> accounts;
-
-    utxo tempU = {
-            "123",
-            0
-    };
-    utxo tempV = {
-            "456",
-            0
-    };
-
-    account tempA = {
-            "lol",
-            12
-    };
-    account tempB = {
-            "lol1",
-            12
-    };
-    account tempC = {
-            "lol2",
-            12
-    };
-
-    utxos.push_back(tempU);
-    utxos.push_back(tempV);
-    accounts.push_back(tempA);
-    accounts.push_back(tempB);
-    accounts.push_back(tempC);
-
-    struct transaction trans1 = {
-            "1",
-            utxos,
-            accounts
-    };
-
-    struct transaction trans2 = {
-            "2",
-            utxos,
-            accounts
-    };
-
-    struct transaction trans3 = {
-            "3",
-            utxos,
-            accounts
-    };
-
-    struct transaction trans4 = {
-            "4",
-            utxos,
-            accounts
-    };
-
-    struct transaction trans5 = {
-            "5",
-            utxos,
-            accounts
-    };
-
-    ledger->addTransaction(trans1);
-    ledger->addTransaction(trans2);
-    ledger->addTransaction(trans3);
-    ledger->addTransaction(trans4);
-    ledger->addTransaction(trans5);
 }
