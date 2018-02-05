@@ -30,7 +30,10 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
 
 
     while (getline(file, transactionStr)) {
-        ledger->addTransaction(parseTransaction(transactionStr));
+        if(!ledger->addTransaction(parseTransaction(transactionStr))){
+            ledger->wipe();
+            break;
+        }
     }
     file.close();
 }

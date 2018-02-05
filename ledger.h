@@ -33,14 +33,20 @@ typedef std::unordered_map<std::string, transaction> transactionMap;
 public:
     Ledger();
     Ledger(std::vector<transaction>);
-    void addTransaction(transaction);
+    bool addTransaction(transaction);
+    bool getTransaction(std::string, transaction&);
+    bool ledgerHasId(std::string);
+    unsigned int sumAccountBalances(std::vector<account>);
     void print();
     std::string getAllFmtTransactions();
     void wipe();
+    int size();
 private:
     std::vector<std::string> transactionKeys;
     transactionMap transactions;
     transaction findTransaction(unsigned int);
+    bool validateId(transaction);
+    bool validateInput(transaction);
 };
 
 std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>);

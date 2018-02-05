@@ -1,4 +1,5 @@
 #include "ledger.h"
+#include "descriptions.h"
 #include <unordered_map>
 #include <vector>
 #include <iostream>
@@ -10,9 +11,21 @@ using namespace std;
 
 Ledger::Ledger() {}
 
-void Ledger::addTransaction(transaction trans) {
+bool Ledger::addTransaction(transaction trans) {
+
+    if(!this->validateId(trans)) {
+        cout << ERR_TRANS_ID_TAKEN << trans.id << endl;
+        return false;
+    }
+
+    if(!this->validateInput(trans)) {
+        return false;
+    }
+
+
     this->transactionKeys.push_back(trans.id);
     this->transactions.insert(pair<string, transaction>(trans.id, trans));
+    return  true;
 }
 
 void Ledger::print() {
@@ -34,6 +47,77 @@ void Ledger::wipe() {
     transactionMap transactions;
     this->transactionKeys = transactionKeys;
     this->transactions = transactions;
+}
+
+int Ledger::size() {
+    return this->transactionKeys.size();
+}
+
+bool Ledger::validateId(transaction trans) {
+    for(int i = 0; i < this->transactionKeys.size(); i++) {
+        if(this->transactionKeys.at(i) == trans.id) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Ledger::ledgerHasId(string id) {
+    for(int i = 0; i < this->transactionKeys.size(); i++) {
+        if(this->transactionKeys.at(i) == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Ledger::validateInput(transaction trans) {
+    for(int i = 0; i < trans.utxos.size(); i++) {
+        utxo inUtxo = trans.utxos.at(i);
+        transaction prevTrans;
+
+        if (!this->getTransaction(inUtxo.transactionId, prevTrans)) {
+            cout << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
+            return false;
+        }
+
+        if (inUtxo.index > prevTrans.accounts.size() - 1) {
+            cout << ERR_TRANS_GENERIC << trans.id << endl;
+            cout << ERR_UTXO_INDEX_OOB << trans.id;
+            cout << "UTXO with transaction id: " << inUtxo.transactionId;
+            cout << "accounts size " << prevTrans.accounts.size() << " =< " << inUtxo.index;
+            return false;
+        }
+
+        unsigned int currTransSum = this->sumAccountBalances(trans.accounts);
+        account prevAcc =  prevTrans.accounts.at(inUtxo.index);
+
+        if (currTransSum != prevAcc.amt) {
+            cout << ERR_UTXO_ACC_MISMATCH << "previous transaction info: ";
+            cout << prevAcc.accountId << " " << prevAcc.amt << " conflicts with this ";
+            cout << "transaction's total of " << currTransSum << endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool Ledger::getTransaction(string id, transaction &trans) {
+    bool valid = this->ledgerHasId(id);
+    if (valid) {
+        trans = this->transactions[id];
+    }
+    return valid;
+}
+
+unsigned int Ledger::sumAccountBalances(std::vector<account> accs) {
+    unsigned int sum = 0;
+    for(int i = 0; i < accs.size(); i++) {
+        sum += accs.at(i).amt;
+    }
+    return sum;
 }
 
 string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
