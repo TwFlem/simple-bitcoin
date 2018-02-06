@@ -74,6 +74,7 @@ bool Ledger::ledgerHasId(string id) {
 bool Ledger::validateInput(transaction trans) {
     unsigned int currTransSum = this->sumAccountBalances(trans.accounts);
     unsigned int sumOfAllUtxoin = 0;
+    vector<account> accsIn;
     for(int i = 0; i < trans.utxos.size(); i++) {
         utxo inUtxo = trans.utxos.at(i);
         transaction prevTrans;
@@ -92,13 +93,30 @@ bool Ledger::validateInput(transaction trans) {
         }
 
         sumOfAllUtxoin +=  prevTrans.accounts.at(inUtxo.index).amt;
+        accsIn.push_back(prevTrans.accounts.at(inUtxo.index));
     }
 
     if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
-        cout << ERR_UTXO_ACC_MISMATCH << "previous transaction info: ";
+        cout << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
         cout << sumOfAllUtxoin << " conflicts with this ";
-        cout << "transaction's total of " << currTransSum << endl;
+        cout << "transaction's output total of " << currTransSum << endl;
         return false;
+    }
+
+    for (int i = 0; i < accsIn.size(); i++) {
+        bool found = false;
+        for (int j = 0; j < trans.accounts.size(); j++) {
+            if (trans.accounts.at(j).accountId == accsIn.at(i).accountId) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            cout << ERR_UTXO_ACC_MISMATCH << "previous transaction account id ";
+            cout << accsIn.at(i).accountId << " does not appear in ";
+            cout << "transaction " << trans.id << " output" << endl;
+            return false;
+        }
     }
 
     return true;

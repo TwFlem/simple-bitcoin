@@ -64,7 +64,7 @@ const std::string ERR_TRANS_ID_TAKEN = "Error, the following transaction id has 
 const std::string ERR_TRANS_ID_DOES_NOT_EXIST = "Error, the following transaction id does not exist in the current ledger: ";
 const std::string ERR_TRANS_GENERIC = "Error, the following transaction is invalid: ";
 const std::string ERR_UTXO_INDEX_OOB = "UTXO index is out of bounds with previous accounts\n";
-const std::string ERR_UTXO_ACC_MISMATCH = "Previous UTXO does not match current transaction's account balance: ";
+const std::string ERR_UTXO_ACC_MISMATCH = "Previous transaction and current transaction input/output mismatch: ";
 
 void promptHelp(std::string);
 void promptInteraction(bool);
