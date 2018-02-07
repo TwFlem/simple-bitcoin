@@ -188,11 +188,25 @@ transaction parseTransaction(string transStr) {
         return transaction{};
     }
 
-    string utxoCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
+    string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
     cout << "extracted uxto cnt: " << utxoCntStr << endl;
 
+    if(utxoCntStr == "" || !is_number(utxoCntStr)) {
+        if (transId == "") {
+            cout << INVALID_UTXO_CNT_BASE << transStr << endl;
+        } else {
+            cout << INVALID_UTXO_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+        }
+        return transaction{};
+    }
 
-    utxoCnt = stoi(utxoCntStr);
+
+    try {
+        utxoCnt = stoi(utxoCntStr);
+    } catch (string &e) {
+        cout << e << endl;
+        return transaction{};
+    }
 
     if (utxoCnt == 0) {
         scanToDelim(iterator, transStr, SEMI_COLON);
@@ -371,4 +385,9 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
 
 void scanToDelim(int &i, string transStr, char endingDelim) {
     while (transStr[i] != endingDelim) i++;
+}
+
+bool is_number(const std::string& s) {
+    return !s.empty() && std::find_if(s.begin(),
+                                      s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
