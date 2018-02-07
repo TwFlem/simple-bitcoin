@@ -154,7 +154,7 @@ transaction parseTransaction(string transStr) {
 
     int iterator = 0;
 
-    transId = extractId(iterator, transStr, SEMI_COLON);
+    transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH) {
         if (transId == "") {
@@ -286,7 +286,6 @@ string extractId(int &i, string transStr, char endingDelim) {
             break;
         }
     }
-    token = idToLower(token);
     return token;
 }
 
@@ -337,7 +336,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                     if (isspace(transStr[i])) continue;
 
                     if (isalnum(transStr[i])) {
-                        string transId = extractId(i, transStr, COMMA);
+                        string transId = idToLower(extractId(i, transStr, COMMA));
                         if (transId == "" || transId.length() != VALID_ID_LENGTH) {
                             if (transId == "") {
                                 cout << INVALID_ID_BASE << transStr << endl;
