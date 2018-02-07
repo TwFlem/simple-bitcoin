@@ -61,6 +61,7 @@ const std::string PROMPT_VERBOSE_ACTIVE = "Verbose mode activated:\n";
 const std::string PROMPT_VERBOSE_NOT_ACTIVE = "Verbose mode deactivated:\n";
 
 const std::string INVALID_ID_BASE = "Input has invalid transaction id: ";
+const std::string INVALID_ACC_ID_BASE = "Input has invalid account id: ";
 const std::string INVALID_UTXO_CNT_BASE = "Input has invalid UTXO count: ";
 const std::string INVALID_VOUT_CNT_BASE = "Input has invalid UTXO count: ";
 

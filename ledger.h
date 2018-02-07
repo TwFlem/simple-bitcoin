@@ -57,5 +57,6 @@ std::vector<utxo> extractUtxoPairs(int&, std::string, int);
 std::vector<account> extractAccountPairs(int&, std::string, int);
 bool is_number(const std::string&);
 void scanToDelim(int&, std::string, char);
+void trimWhiteSpace(int&, std::string);
 
 #endif //SIMPLE_BITCOIN_LEDGER_H

@@ -209,7 +209,11 @@ transaction parseTransaction(string transStr) {
     }
 
     if (utxoCnt == 0) {
-        scanToDelim(iterator, transStr, SEMI_COLON);
+        trimWhiteSpace(iterator, transStr);
+        if(iterator >= transStr.length() || transStr[iterator] != SEMI_COLON) {
+            cout << "Error: utxo count mismatch." << endl;
+            return transaction{};
+        }
         iterator++;
     } else {
         utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
@@ -221,18 +225,55 @@ transaction parseTransaction(string transStr) {
     }
     cout << "before extracted: " << transStr[iterator] << endl;
 
+    if(utxoCnt != utxos.size()) {
+        cout << "Error: utxo count does match utxo size" << endl;
+        return transaction{};
+    }
+
     string voutCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
     cout << "extracted: " << voutCntStr << endl;
 
-    if (transId == "") {
-        cout << errTrans << endl;
-        return emptyTrans;
+    if(voutCntStr == "" || !is_number(voutCntStr)) {
+        if (voutCntStr == "") {
+            cout << INVALID_VOUT_CNT_BASE << transStr << endl;
+        } else {
+            cout << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+        }
+        return transaction{};
     }
 
-    voutCnt = stoi(voutCntStr);
+    try {
+        voutCnt = stoi(voutCntStr);
+    } catch (string &e) {
+        cout << e << endl;
+        return transaction{};
+    }
 
-    accounts = extractAccountPairs(iterator, transStr, voutCnt);
-    cout << "vout pairs: " << accounts.at(0).accountId << " " << accounts.at(0).amt << endl;
+    if (voutCnt == 0) {
+        scanToDelim(iterator, transStr, SEMI_COLON);
+        iterator++;
+    } else {
+        accounts = extractAccountPairs(iterator, transStr, voutCnt);
+        if(accounts.size() == 0) {
+            cout << "Error: vout mal formed" << endl;
+            return transaction{};
+        }
+    }
+
+    if (accounts.size() > 0) cout << "vout pairs: " << accounts.at(0).accountId << " " << accounts.at(0).amt << endl;
+
+    if(voutCnt != accounts.size()) {
+        cout << "Error: vout count does match vout size" << endl;
+        return transaction{};
+    }
+
+    trimWhiteSpace(iterator, transStr);
+
+    if(iterator != transStr.length()) {
+        cout << "Error: mal formed transaction." << endl;
+        cout << iterator << " " << transStr.length() << endl;
+        return transaction{};
+    }
 
 
     return transaction{
@@ -338,10 +379,11 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                             unsigned int utxoIndex;
                             string utxoIndexStr = extractPairCnt(i, transStr, CLOSING_PAREN);
 
-                            if (is_number(utxoIndexStr)) {
-                                utxoIndex = stoi(utxoIndexStr);
+                            if (!is_number(utxoIndexStr)) {
+                                cout << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+                                return emptyUtxo;
                             }
-
+                            utxoIndex = stoi(utxoIndexStr);
                             ut.index = utxoIndex;
                             complete = true;
                             break;
@@ -372,6 +414,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
 
 vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
     vector<account> accounts;
+    vector<account> emptyAccs;
     string token = "";
 
     for (int x = 0; x < accNum; x++) {
@@ -380,7 +423,7 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
 
             if (isspace(transStr[i])) continue;
 
-            if (transStr[i] == '(') {
+            else if (transStr[i] == '(') {
                 //TODO: account for no )
                 bool complete = false;
                 while (!complete) {
@@ -388,9 +431,19 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
                     if (isspace(transStr[i])) continue;
 
                     if (isalnum(transStr[i])) {
-                        acc.accountId = extractId(i, transStr, COMMA);
+                        string accId = extractId(i, transStr, COMMA);
+                        if(accId == "") {
+                            cout << INVALID_ACC_ID_BASE << transStr << endl;
+                            return emptyAccs;
+                        }
+                        acc.accountId = accId;
                         while (transStr[i] != CLOSING_PAREN) {
-                            acc.amt = stoi(extractPairCnt(i, transStr, CLOSING_PAREN));
+                            string accAmtStr = extractPairCnt(i, transStr, CLOSING_PAREN);
+                            if (accAmtStr == "" || !is_number(accAmtStr)) {
+                                cout << INVALID_VOUT_CNT_BASE << " in " << transStr << " must be numeric." << endl;
+                                return emptyAccs;
+                            }
+                            acc.amt = stoi(accAmtStr);
                             complete = true;
                             break;
                         }
@@ -401,9 +454,14 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
                 break;
             }
 
-            if (transStr[i] == ';') {
+            else if (transStr[i] == ';') {
                 i++;
                 break;
+            }
+
+            else {
+                cout << "Error: Missing (" << endl;
+                return emptyAccs;
             }
         }
     }
@@ -412,6 +470,10 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
 
 void scanToDelim(int &i, string transStr, char endingDelim) {
     while (transStr[i] != endingDelim) i++;
+}
+
+void trimWhiteSpace(int &i, string transStr) {
+    while (isspace(transStr[i])) i++;
 }
 
 bool is_number(const std::string& s) {
