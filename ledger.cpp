@@ -86,8 +86,8 @@ bool Ledger::validateInput(transaction trans) {
         if (inUtxo.index > prevTrans.accounts.size() - 1) {
             cout << ERR_TRANS_GENERIC << trans.id << endl;
             cout << ERR_UTXO_INDEX_OOB << trans.id;
-            cout << "UTXO with transaction id: " << inUtxo.transactionId;
-            cout << "accounts size " << prevTrans.accounts.size() << " =< " << inUtxo.index;
+            cout << " UTXO with transaction id: " << inUtxo.transactionId;
+            cout << " accounts size " << prevTrans.accounts.size() << " <= " << inUtxo.index << endl;
             return false;
         }
 
@@ -335,7 +335,14 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                         }
                         ut.transactionId = transId;
                         while (transStr[i] != CLOSING_PAREN) {
-                            ut.index = stoi(extractPairCnt(i, transStr, CLOSING_PAREN));
+                            unsigned int utxoIndex;
+                            string utxoIndexStr = extractPairCnt(i, transStr, CLOSING_PAREN);
+
+                            if (is_number(utxoIndexStr)) {
+                                utxoIndex = stoi(utxoIndexStr);
+                            }
+
+                            ut.index = utxoIndex;
                             complete = true;
                             break;
                         }
