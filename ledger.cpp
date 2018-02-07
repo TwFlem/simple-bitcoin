@@ -213,6 +213,10 @@ transaction parseTransaction(string transStr) {
         iterator++;
     } else {
         utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
+        if(utxos.size() == 0) {
+            cout << "Error: utxo mal formed" << endl;
+            return transaction{};
+        }
         cout << "utxo pairs: " << utxos.at(0).transactionId << " " << utxos.at(0).index << endl;
     }
     cout << "before extracted: " << transStr[iterator] << endl;
@@ -302,6 +306,7 @@ string extractPairCnt(int &i, string transStr, char endingDelim) {
 
 vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
     vector<utxo> utxos;
+    vector<utxo> emptyUtxo;
     string token = "";
 
     for (int x = 0; x < utxoNum; x++) {
@@ -318,7 +323,17 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                     if (isspace(transStr[i])) continue;
 
                     if (isalnum(transStr[i])) {
-                        ut.transactionId = extractId(i, transStr, COMMA);
+                        string transId = extractId(i, transStr, COMMA);
+                        if (transId == "" || transId.length() != VALID_ID_LENGTH) {
+                            if (transId == "") {
+                                cout << INVALID_ID_BASE << transStr << endl;
+                            } else {
+                                cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+                                cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+                            }
+                            return emptyUtxo;
+                        }
+                        ut.transactionId = transId;
                         while (transStr[i] != CLOSING_PAREN) {
                             ut.index = stoi(extractPairCnt(i, transStr, CLOSING_PAREN));
                             complete = true;

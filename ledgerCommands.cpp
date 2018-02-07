@@ -30,7 +30,8 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
 
 
     while (getline(file, transactionStr)) {
-        if(!ledger->addTransaction(parseTransaction(transactionStr))){
+        struct transaction newTrans = parseTransaction(transactionStr);
+        if(newTrans.id == "" || !ledger->addTransaction(newTrans)) {
             ledger->wipe();
             break;
         }
