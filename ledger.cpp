@@ -250,8 +250,8 @@ transaction parseTransaction(string transStr) {
     }
 
     if (voutCnt == 0) {
-        scanToDelim(iterator, transStr, SEMI_COLON);
-        iterator++;
+        cout << "Error: vout count must be at least 1." << endl;
+        return transaction{};
     } else {
         accounts = extractAccountPairs(iterator, transStr, voutCnt);
         if(accounts.size() == 0) {
