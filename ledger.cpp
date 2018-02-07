@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 
 using namespace std;
 
@@ -150,14 +152,9 @@ transaction parseTransaction(string transStr) {
     vector<account> accounts;
     transaction emptyTrans = transaction{ transId, utxos, accounts };
 
-    string errTrans = "Bad Transaction: " + transStr;
-
     int iterator = 0;
 
     transId = extractId(iterator, transStr, SEMI_COLON);
-
-    // if verbose
-    cout << "extracted trans id: " << transId << endl;
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH) {
         if (transId == "") {
@@ -170,7 +167,6 @@ transaction parseTransaction(string transStr) {
     }
 
     string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
-    cout << "extracted uxto cnt: " << utxoCntStr << endl;
 
     if(utxoCntStr == "" || !is_number(utxoCntStr)) {
         if (transId == "") {
@@ -202,9 +198,7 @@ transaction parseTransaction(string transStr) {
             cout << "Error: utxo mal formed" << endl;
             return transaction{};
         }
-        cout << "utxo pairs: " << utxos.at(0).transactionId << " " << utxos.at(0).index << endl;
     }
-    cout << "before extracted: " << transStr[iterator] << endl;
 
     if(utxoCnt != utxos.size()) {
         cout << "Error: utxo count does match utxo size" << endl;
@@ -212,7 +206,6 @@ transaction parseTransaction(string transStr) {
     }
 
     string voutCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
-    cout << "extracted: " << voutCntStr << endl;
 
     if(voutCntStr == "" || !is_number(voutCntStr)) {
         if (voutCntStr == "") {
@@ -240,8 +233,6 @@ transaction parseTransaction(string transStr) {
             return transaction{};
         }
     }
-
-    if (accounts.size() > 0) cout << "vout pairs: " << accounts.at(0).accountId << " " << accounts.at(0).amt << endl;
 
     if(voutCnt != accounts.size()) {
         cout << "Error: vout count does match vout size" << endl;
@@ -295,6 +286,7 @@ string extractId(int &i, string transStr, char endingDelim) {
             break;
         }
     }
+    token = idToLower(token);
     return token;
 }
 
@@ -389,7 +381,6 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
     }
     //TODO: fix this
     i++;
-    cout << "i and char before returning utxos: " << i << " " << transStr[i] << endl;
     return utxos;
 }
 
@@ -458,6 +449,17 @@ void trimWhiteSpace(int &i, string transStr) {
 }
 
 bool is_number(const std::string& s) {
-    return !s.empty() && std::find_if(s.begin(),
-                                      s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+    return !s.empty() && find_if(s.begin(), s.end(), [](char c) { return !isdigit(c); }) == s.end();
+}
+
+string idToLower(string s) {
+    string newStr = "";
+   for(int i = 0; i < s.length(); i++) {
+       char c = s[i];
+       if (isalpha(c)) {
+           c = tolower(c);
+       }
+       newStr = newStr + c;
+   }
+    return newStr;
 }

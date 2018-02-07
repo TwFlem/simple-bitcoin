@@ -11,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 
-
 struct utxo {
     std::string transactionId;
     unsigned int index;
@@ -58,5 +57,6 @@ std::vector<account> extractAccountPairs(int&, std::string, int);
 bool is_number(const std::string&);
 void scanToDelim(int&, std::string, char);
 void trimWhiteSpace(int&, std::string);
+std::string idToLower(std::string);
 
 #endif //SIMPLE_BITCOIN_LEDGER_H
