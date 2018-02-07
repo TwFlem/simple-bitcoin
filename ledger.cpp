@@ -156,12 +156,14 @@ transaction parseTransaction(string transStr) {
 
     transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
 
-    if (transId == "" || transId.length() != VALID_ID_LENGTH) {
+    if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
         if (transId == "") {
             cout << INVALID_ID_BASE << transStr << endl;
-        } else {
+        } else if (transId.length() != VALID_ID_LENGTH) {
             cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
             cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+        } else {
+            cout << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
         }
         return transaction{};
     }
@@ -337,12 +339,14 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
 
                     if (isalnum(transStr[i])) {
                         string transId = idToLower(extractId(i, transStr, COMMA));
-                        if (transId == "" || transId.length() != VALID_ID_LENGTH) {
+                        if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
                             if (transId == "") {
                                 cout << INVALID_ID_BASE << transStr << endl;
-                            } else {
+                            } else if (transId.length() != VALID_ID_LENGTH) {
                                 cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
                                 cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+                            } else {
+                                cout << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
                             }
                             return emptyUtxo;
                         }
@@ -449,6 +453,24 @@ void trimWhiteSpace(int &i, string transStr) {
 
 bool is_number(const std::string& s) {
     return !s.empty() && find_if(s.begin(), s.end(), [](char c) { return !isdigit(c); }) == s.end();
+}
+
+bool isHex(const string s) {
+    for(int i = 0; i < s.length(); i++) {
+        char c = s[i];
+        if (isalpha(c)) c = tolower(c);
+        if (c == 'a'
+            || c == 'b'
+            || c == 'c'
+            || c == 'd'
+            || c == 'e'
+            || c == 'f'
+            || isdigit(c)) {
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
 
 string idToLower(string s) {

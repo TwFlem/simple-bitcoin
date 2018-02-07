@@ -58,5 +58,6 @@ bool is_number(const std::string&);
 void scanToDelim(int&, std::string, char);
 void trimWhiteSpace(int&, std::string);
 std::string idToLower(std::string);
+bool isHex(const std::string);
 
 #endif //SIMPLE_BITCOIN_LEDGER_H
