@@ -315,7 +315,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
 
             if (isspace(transStr[i])) continue;
 
-            if (transStr[i] == '(') {
+            else if (transStr[i] == '(') {
                 //TODO: account for no )
                 bool complete = false;
                 while (!complete) {
@@ -346,9 +346,14 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                 break;
             }
 
-            if (transStr[i] == ';') {
+            else if (transStr[i] == ';') {
                 i++;
                 break;
+            }
+
+            else {
+                cout << "Error: Missing (" << endl;
+                return emptyUtxo;
             }
         }
     }
