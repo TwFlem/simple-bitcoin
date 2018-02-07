@@ -28,6 +28,11 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
 
     ifstream file(filename);
 
+    if(!file) {
+        cerr << "Error: file " << filename << " cannot be opened for reading" << endl;
+        return;
+    }
+
 
     while (getline(file, transactionStr)) {
         struct transaction newTrans = parseTransaction(transactionStr);
