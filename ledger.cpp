@@ -12,7 +12,6 @@ using namespace std;
 Ledger::Ledger() {}
 
 bool Ledger::addTransaction(transaction trans) {
-
     if(!this->validateId(trans)) {
         cout << ERR_TRANS_ID_TAKEN << trans.id << endl;
         return false;
@@ -170,19 +169,23 @@ transaction parseTransaction(string transStr) {
     vector<account> accounts;
     transaction emptyTrans = transaction{ transId, utxos, accounts };
 
-    string token = "";
     string errTrans = "Bad Transaction: " + transStr;
 
     int iterator = 0;
 
     transId = extractId(iterator, transStr, SEMI_COLON);
+
+    // if verbose
     cout << "extracted trans id: " << transId << endl;
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH) {
-        if (transId.length() != VALID_ID_LENGTH) cout << "Error: transaction id is not "
-                                                      << VALID_ID_LENGTH << " characters in length" << endl;
-        cout << errTrans << endl;
-        return emptyTrans;
+        if (transId == "") {
+            cout << INVALID_ID_BASE << transStr << endl;
+        } else {
+            cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+            cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+        }
+        return transaction{};
     }
 
     string utxoCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
@@ -225,11 +228,9 @@ string extractId(int &i, string transStr, char endingDelim) {
     string token = "";
     for (i; i < transStr.length(); i++) {
 
-
         if (isspace(transStr[i])) continue;
 
         if (isalnum(transStr[i])) {
-
             if (token.length() > 0) {
                 cout << "Error: transaction id mal formed." << endl;
                 token = "";
@@ -250,7 +251,6 @@ string extractId(int &i, string transStr, char endingDelim) {
         }
 
         if (!isspace(transStr[i]) && !isalnum(transStr[i])) {
-            cout << "Error: \"" << transStr[i] << "\" is not part of a valid transaction id." << endl;
             token = "";
             break;
         }

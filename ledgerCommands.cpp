@@ -45,7 +45,13 @@ void transaction(Ledger* ledger, bool interactive, bool verbose) {
 
     getline(cin, trans);
 
-    ledger->addTransaction(parseTransaction(trans));
+    struct transaction newTrans = parseTransaction(trans);
+
+    if(newTrans.id == "") {
+        return;
+    }
+
+    ledger->addTransaction(newTrans);
     ledger->print();
 }
 

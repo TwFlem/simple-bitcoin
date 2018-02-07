@@ -60,6 +60,8 @@ const std::string PROMPT_VERBOSE_ACTIVE = "Verbose mode activated:\n";
 
 const std::string PROMPT_VERBOSE_NOT_ACTIVE = "Verbose mode deactivated:\n";
 
+const std::string INVALID_ID_BASE = "Input has invalid transaction id: ";
+
 const std::string ERR_TRANS_ID_TAKEN = "Error, the following transaction id has been taken: ";
 const std::string ERR_TRANS_ID_DOES_NOT_EXIST = "Error, the following transaction id does not exist in the current ledger: ";
 const std::string ERR_TRANS_GENERIC = "Error, the following transaction is invalid: ";
