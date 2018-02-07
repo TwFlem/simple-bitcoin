@@ -69,7 +69,13 @@ void dump(Ledger* ledger, bool interactive, bool verbose) {
 
     getline(cin, filename);
 
-    ledgerFile.open (filename);
+    try {
+        ledgerFile.open(filename);
+    } catch (string e) {
+        cerr << "Error: file " << filename << " cannot be opened for writing" << endl;
+        return;
+    }
+
     if (verbose) cout << "Writing ledger to file " << filename << ":" << endl;
 
     string allFmtTransactions = ledger->getAllFmtTransactions();
