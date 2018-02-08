@@ -16,6 +16,7 @@ void help() {
     cout << W_CMD_DESC << endl;
     cout << I_CMD_DESC << endl;
     cout << V_CMD_DESC << endl;
+    cout << B_CMD_DESC << endl;
 }
 
 void file(Ledger* ledger, bool interactive, bool verbose) {
