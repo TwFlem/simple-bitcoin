@@ -18,6 +18,7 @@ struct utxo {
 struct account {
     std::string accountId;
     unsigned int amt;
+    bool spent;
 };
 struct transaction{
     std::string id;
@@ -47,6 +48,7 @@ private:
     transaction findTransaction(unsigned int);
     bool validateId(transaction);
     bool validateInput(transaction);
+    void markUtxoSpent(std::string, int);
 };
 
 std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>);

@@ -108,7 +108,13 @@ bool Ledger::validateInput(transaction trans) {
             return false;
         }
 
+        if(prevTrans.accounts.at(inUtxo.index).spent) {
+            cerr << "Error in transaction " << trans.id << ": previous account transaction of " << prevTrans.id << " belonging to ";
+            cerr << prevTrans.accounts.at(inUtxo.index).accountId << " has already been spent" << endl;
+            return false;
+        }
         sumOfAllUtxoin +=  prevTrans.accounts.at(inUtxo.index).amt;
+        this->markUtxoSpent(inUtxo.transactionId, inUtxo.index);
     }
 
     if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
@@ -118,6 +124,11 @@ bool Ledger::validateInput(transaction trans) {
         return false;
     }
     return true;
+}
+
+
+void Ledger::markUtxoSpent(string id, int utxoIndex) {
+    this->transactions[id].accounts.at(utxoIndex).spent = true;
 }
 
 
