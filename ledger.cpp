@@ -40,19 +40,16 @@ void Ledger::print() {
 }
 
 void Ledger::getBalance(string s) {
-    bool found = false;
     int sum = 0;
     for(int i = this->transactionKeys.size() - 1; i > 0; i--) {
         vector<account> accs = this->transactions[this->transactionKeys.at(i)].accounts;
         for(int j = 0; j < accs.size(); j++) {
             if(accs.at(j).accountId == s && !accs.at(j).spent) {
-                found = true;
                 sum += accs.at(j).amt;
             }
         }
     }
-    if(found)cout << s << " has " << sum << endl;
-    else cerr << "Error: No balance for " << s << " in ledger" << endl;
+    cout << s << " has " << sum << endl;
 }
 
 string Ledger::getAllFmtTransactions() {
@@ -130,8 +127,8 @@ bool Ledger::validateInput(transaction trans) {
     if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
         this->undoMarkUtxoSpents(utxoMarkedSpent);
         cerr << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
-        cerr << sumOfAllUtxoin << " conflicts with this ";
-        cerr << "transaction's output total of " << currTransSum << endl;
+        cerr << sumOfAllUtxoin << " conflicts with ";
+        cerr << "transaction " << trans.id << " output total of " << currTransSum << endl;
         return false;
     }
     return true;
