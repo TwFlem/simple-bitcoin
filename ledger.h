@@ -40,6 +40,7 @@ public:
     std::string getAllFmtTransactions();
     void wipe();
     int size();
+    void balance(std::string);
 private:
     std::vector<std::string> transactionKeys;
     transactionMap transactions;

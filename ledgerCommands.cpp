@@ -47,7 +47,7 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
 void transaction(Ledger* ledger, bool interactive, bool verbose) {
     string trans;
 
-    if (interactive) cout << "Enter a transaction to add to the ledger" << endl;
+    if (interactive) cout << "Enter a transaction:" << endl;
 
     getline(cin, trans);
 
@@ -84,4 +84,13 @@ void dump(Ledger* ledger, bool interactive, bool verbose) {
     if (verbose) cout << allFmtTransactions;
 
     ledgerFile.close();
+}
+
+void balance(Ledger* ledger, bool interactive, bool verbose) {
+    string accName;
+    if (interactive) cout << "Enter an account name:" << endl;
+
+    getline(cin, accName);
+
+    ledger->balance(accName);
 }

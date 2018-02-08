@@ -34,6 +34,19 @@ void Ledger::print() {
     cout << this->getAllFmtTransactions() << endl;
 }
 
+void Ledger::balance(string s) {
+    for(int i = this->transactionKeys.size() - 1; i > 0; i--) {
+        vector<account> accs = this->transactions[this->transactionKeys.at(i)].accounts;
+        for(int j = 0; j < accs.size(); j++) {
+            if(accs.at(j).accountId == s) {
+                cout << s << " has " << accs.at(j).amt << endl;
+                return;
+            }
+        }
+    }
+    cerr << "Error: No balance for " << s << " in ledger" << endl;
+}
+
 string Ledger::getAllFmtTransactions() {
     string transactions = "";
     for(auto const transId : this->transactionKeys) {
