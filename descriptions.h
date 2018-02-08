@@ -54,7 +54,7 @@ const std::string PROMPT_VERBOSE_NOT_ACTIVE = "Verbose mode deactivated:\n";
 const std::string INVALID_ID_BASE = "Input has invalid transaction id: ";
 const std::string INVALID_ACC_ID_BASE = "Input has invalid account id: ";
 const std::string INVALID_UTXO_CNT_BASE = "Input has invalid UTXO count: ";
-const std::string INVALID_VOUT_CNT_BASE = "Input has invalid UTXO count: ";
+const std::string INVALID_VOUT_CNT_BASE = "Input has invalid VOUT count: ";
 
 const std::string ERR_TRANS_ID_TAKEN = "Error, the following transaction id has been taken: ";
 const std::string ERR_TRANS_ID_DOES_NOT_EXIST = "Error, the following transaction id does not exist in the current ledger: ";

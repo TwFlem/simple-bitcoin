@@ -187,7 +187,7 @@ transaction parseTransaction(string transStr) {
     string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
 
     if(utxoCntStr == "" || !is_number(utxoCntStr)) {
-        if (transId == "") {
+        if (utxoCntStr == "") {
             cerr << INVALID_UTXO_CNT_BASE << transStr << endl;
         } else {
             cerr << INVALID_UTXO_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
@@ -223,7 +223,7 @@ transaction parseTransaction(string transStr) {
         return transaction{};
     }
 
-    string voutCntStr = extractPairCnt(iterator, transStr, SEMI_COLON);
+    string voutCntStr = extractId(iterator, transStr, SEMI_COLON);
 
     if(voutCntStr == "" || !is_number(voutCntStr)) {
         if (voutCntStr == "") {
@@ -276,7 +276,6 @@ transaction parseTransaction(string transStr) {
 string extractId(int &i, string transStr, char endingDelim) {
     string token = "";
     for (i; i < transStr.length(); i++) {
-
         if (isspace(transStr[i])) continue;
 
         if (isalnum(transStr[i])) {
@@ -310,7 +309,6 @@ string extractId(int &i, string transStr, char endingDelim) {
 string extractPairCnt(int &i, string transStr, char endingDelim) {
     string token = "";
     for (i; i < transStr.length(); i++) {
-
         if (isspace(transStr[i])) continue;
 
         if (isdigit(transStr[i])) {
@@ -393,13 +391,16 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
             }
 
             else {
-                cerr << "Error: Missing (" << endl;
+                cerr << "Error: Missing ( for " << transStr << endl;
                 return emptyUtxo;
             }
         }
     }
     //TODO: fix this
-    i++;
+    trimWhiteSpace(i, transStr);
+    if(transStr[i] == ';') {
+        i++;
+    }
     return utxos;
 }
 
