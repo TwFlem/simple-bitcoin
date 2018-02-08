@@ -17,20 +17,20 @@ Ledger::Ledger() {}
 bool Ledger::addTransaction(transaction trans, bool verbose) {
     if(!this->validateId(trans)) {
         cerr << ERR_TRANS_ID_TAKEN << trans.id << endl;
-        if (verbose) cerr << trans.id << ": bad" << endl;
+        cerr << trans.id << ": bad" << endl;
         return false;
     }
 
 
     if(!this->validateInput(trans)) {
-        if (verbose) cerr << trans.id << ": bad" << endl;
+        cerr << trans.id << ": bad" << endl;
         return false;
     }
 
 
     this->transactionKeys.push_back(trans.id);
     this->transactions.insert(pair<string, transaction>(trans.id, trans));
-    if (verbose) cout << trans.id << ": good" << endl;
+    cout << trans.id << ": good" << endl;
     return  true;
 }
 
