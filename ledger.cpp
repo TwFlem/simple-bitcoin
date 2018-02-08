@@ -2,6 +2,7 @@
 #include "descriptions.h"
 #include <unordered_map>
 #include <vector>
+#include <stack>
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -20,6 +21,7 @@ bool Ledger::addTransaction(transaction trans, bool verbose) {
         return false;
     }
 
+
     if(!this->validateInput(trans)) {
         if (verbose) cerr << trans.id << ": bad" << endl;
         return false;
@@ -28,7 +30,7 @@ bool Ledger::addTransaction(transaction trans, bool verbose) {
 
     this->transactionKeys.push_back(trans.id);
     this->transactions.insert(pair<string, transaction>(trans.id, trans));
-    if (verbose) cerr << trans.id << ": good" << endl;
+    if (verbose) cout << trans.id << ": good" << endl;
     return  true;
 }
 
@@ -94,16 +96,19 @@ bool Ledger::ledgerHasId(string id) {
 bool Ledger::validateInput(transaction trans) {
     unsigned int currTransSum = this->sumAccountBalances(trans.accounts);
     unsigned int sumOfAllUtxoin = 0;
+    stack<utxo> utxoMarkedSpent;
     for(int i = 0; i < trans.utxos.size(); i++) {
         utxo inUtxo = trans.utxos.at(i);
         transaction prevTrans;
 
         if (!this->getTransaction(inUtxo.transactionId, prevTrans)) {
+            this->undoMarkUtxoSpents(utxoMarkedSpent);
             cerr << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
             return false;
         }
 
         if (inUtxo.index > prevTrans.accounts.size() - 1) {
+            this->undoMarkUtxoSpents(utxoMarkedSpent);
             cerr << ERR_TRANS_GENERIC << trans.id << endl;
             cerr << ERR_UTXO_INDEX_OOB << trans.id;
             cerr << " UTXO with transaction id: " << inUtxo.transactionId;
@@ -112,15 +117,18 @@ bool Ledger::validateInput(transaction trans) {
         }
 
         if(prevTrans.accounts.at(inUtxo.index).spent) {
-            cerr << "Error in transaction " << trans.id << ": previous account transaction of " << prevTrans.id << " belonging to ";
+            this->undoMarkUtxoSpents(utxoMarkedSpent);
+            cerr << "Error in transaction " << trans.id << ": previous utxo in " << prevTrans.id << " belonging to ";
             cerr << prevTrans.accounts.at(inUtxo.index).accountId << " has already been spent" << endl;
             return false;
         }
         sumOfAllUtxoin +=  prevTrans.accounts.at(inUtxo.index).amt;
-        this->markUtxoSpent(inUtxo.transactionId, inUtxo.index);
+        this->markUtxoSpent(inUtxo.transactionId, inUtxo.index, true);
+        utxoMarkedSpent.push(inUtxo);
     }
 
     if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
+        this->undoMarkUtxoSpents(utxoMarkedSpent);
         cerr << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
         cerr << sumOfAllUtxoin << " conflicts with this ";
         cerr << "transaction's output total of " << currTransSum << endl;
@@ -130,10 +138,17 @@ bool Ledger::validateInput(transaction trans) {
 }
 
 
-void Ledger::markUtxoSpent(string id, int utxoIndex) {
-    this->transactions[id].accounts.at(utxoIndex).spent = true;
+void Ledger::undoMarkUtxoSpents(stack<utxo> utxos) {
+    while(!utxos.empty()) {
+        utxo u = utxos.top();
+        this->markUtxoSpent(u.transactionId, u.index, false);
+        utxos.pop();
+    }
 }
 
+void Ledger::markUtxoSpent(string id, int utxoIndex, bool value) {
+    this->transactions[id].accounts.at(utxoIndex).spent = value;
+}
 
 bool Ledger::getTransaction(string id, transaction &trans) {
     bool valid = this->ledgerHasId(id);
@@ -185,6 +200,7 @@ transaction parseTransaction(string transStr) {
     int iterator = 0;
 
     transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
+    string badTrans = "Error in transaction: " + transId;
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
         if (transId == "") {
@@ -202,9 +218,11 @@ transaction parseTransaction(string transStr) {
 
     if(utxoCntStr == "" || !is_number(utxoCntStr)) {
         if (utxoCntStr == "") {
-            cerr << INVALID_UTXO_CNT_BASE << transStr << endl;
+            cerr << INVALID_UTXO_CNT_BASE << endl;
+            cerr << badTrans << endl;
         } else {
-            cerr << INVALID_UTXO_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+            cerr << INVALID_UTXO_CNT_BASE << utxoCnt << " in " << transStr << " must be numeric." << endl;
+            cerr << badTrans << endl;
         }
         return transaction{};
     }
@@ -214,6 +232,7 @@ transaction parseTransaction(string transStr) {
         utxoCnt = stoi(utxoCntStr);
     } catch (string &e) {
         cerr << e << endl;
+        cerr << badTrans << endl;
         return transaction{};
     }
 
@@ -221,6 +240,7 @@ transaction parseTransaction(string transStr) {
         trimWhiteSpace(iterator, transStr);
         if(iterator >= transStr.length() || transStr[iterator] != SEMI_COLON) {
             cerr << "Error: utxo count mismatch." << endl;
+            cerr << badTrans << endl;
             return transaction{};
         }
         iterator++;
@@ -228,12 +248,14 @@ transaction parseTransaction(string transStr) {
         utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
         if(utxos.size() == 0) {
             cerr << "Error: utxo mal formed" << endl;
+            cerr << badTrans << endl;
             return transaction{};
         }
     }
 
     if(utxoCnt != utxos.size()) {
-        cerr << "Error: utxo count does match utxo size" << endl;
+        cerr << "Error: utxo count does not match utxo size" << endl;
+        cerr << badTrans << endl;
         return transaction{};
     }
 
@@ -241,9 +263,11 @@ transaction parseTransaction(string transStr) {
 
     if(voutCntStr == "" || !is_number(voutCntStr)) {
         if (voutCntStr == "") {
-            cerr << INVALID_VOUT_CNT_BASE << transStr << endl;
+            cerr << INVALID_VOUT_CNT_BASE << endl;
+            cerr << badTrans << endl;
         } else {
-            cerr << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+            cerr << INVALID_VOUT_CNT_BASE << voutCntStr << " in " << transStr << " must be numeric." << endl;
+            cerr << badTrans << endl;
         }
         return transaction{};
     }
@@ -252,22 +276,26 @@ transaction parseTransaction(string transStr) {
         voutCnt = stoi(voutCntStr);
     } catch (string &e) {
         cerr << e << endl;
+        cerr << badTrans << endl;
         return transaction{};
     }
 
     if (voutCnt == 0) {
         cerr << "Error: Account pair count must be at least 1." << endl;
+        cerr << badTrans << endl;
         return transaction{};
     } else {
         accounts = extractAccountPairs(iterator, transStr, voutCnt);
         if(accounts.size() == 0) {
             cerr << "Error: Account pair mal formed" << endl;
+            cerr << badTrans << endl;
             return transaction{};
         }
     }
 
     if(voutCnt != accounts.size()) {
         cerr << "Error: Account pair count does match Account pair size" << endl;
+        cerr << badTrans << endl;
         return transaction{};
     }
 
@@ -275,10 +303,9 @@ transaction parseTransaction(string transStr) {
 
     if(iterator != transStr.length()) {
         cerr << "Error: mal formed transaction." << endl;
-        cerr << iterator << " " << transStr.length() << endl;
+        cerr << badTrans << endl;
         return transaction{};
     }
-
 
     return transaction{
             transId,
@@ -456,6 +483,7 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
                     }
 
                 }
+                acc.spent = false;
                 accounts.push_back(acc);
                 break;
             }

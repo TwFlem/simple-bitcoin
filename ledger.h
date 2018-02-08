@@ -8,6 +8,7 @@
 
 #include <map>
 #include <vector>
+#include <stack>
 #include <string>
 #include <unordered_map>
 
@@ -32,7 +33,6 @@ typedef std::unordered_map<std::string, transaction> transactionMap;
 
 public:
     Ledger();
-    Ledger(std::vector<transaction>);
     bool addTransaction(transaction, bool);
     bool getTransaction(std::string, transaction&);
     bool ledgerHasId(std::string);
@@ -48,7 +48,8 @@ private:
     transaction findTransaction(unsigned int);
     bool validateId(transaction);
     bool validateInput(transaction);
-    void markUtxoSpent(std::string, int);
+    void markUtxoSpent(std::string, int, bool);
+    void undoMarkUtxoSpents(std::stack<utxo>);
 };
 
 std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>);
