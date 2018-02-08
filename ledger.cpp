@@ -37,17 +37,20 @@ void Ledger::print() {
     cout << this->getAllFmtTransactions() << endl;
 }
 
-void Ledger::balance(string s) {
+void Ledger::getBalance(string s) {
+    bool found = false;
+    int sum = 0;
     for(int i = this->transactionKeys.size() - 1; i > 0; i--) {
         vector<account> accs = this->transactions[this->transactionKeys.at(i)].accounts;
         for(int j = 0; j < accs.size(); j++) {
-            if(accs.at(j).accountId == s) {
-                cout << s << " has " << accs.at(j).amt << endl;
-                return;
+            if(accs.at(j).accountId == s && !accs.at(j).spent) {
+                found = true;
+                sum += accs.at(j).amt;
             }
         }
     }
-    cerr << "Error: No balance for " << s << " in ledger" << endl;
+    if(found)cout << s << " has " << sum << endl;
+    else cerr << "Error: No balance for " << s << " in ledger" << endl;
 }
 
 string Ledger::getAllFmtTransactions() {

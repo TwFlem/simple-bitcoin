@@ -92,5 +92,5 @@ void balance(Ledger* ledger, bool interactive, bool verbose) {
 
     getline(cin, accName);
 
-    ledger->balance(accName);
+    ledger->getBalance(accName);
 }
