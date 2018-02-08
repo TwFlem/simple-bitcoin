@@ -23,14 +23,4 @@ Errors from running any command are always printed to cerr- regardless of whethe
 verbose mode is off or on. The only things that are printed using [V]erbose are
 <transid>: good and <transid>: bad as each transaction is added to the ledger.
 
-Although not stated explicitly, Double spending has been accounted for.
-
-For example, the ledger:
-f2cea539; 0; ; 1; (Alice, 1000)
-4787df35; 1; (f2cea539, 0); 3; (Bob, 150)(Alice, 845)(Gopesh, 5)
-8789ff90; 1; (f2cea539, 0); 3; (Bob, 150)(Alice, 845)(Gopesh, 5)
-
-will not be valid since (Alice, 1000) has already been consumed once by transaction
-4787df35.
-
 Known Bugs: None that I know of.
