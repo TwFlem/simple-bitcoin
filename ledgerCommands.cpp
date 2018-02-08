@@ -59,7 +59,6 @@ void transaction(Ledger* ledger, bool interactive, bool verbose) {
     }
 
     ledger->addTransaction(newTrans);
-    ledger->print();
 }
 
 void dump(Ledger* ledger, bool interactive, bool verbose) {

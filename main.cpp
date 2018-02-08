@@ -36,7 +36,7 @@ int main() {
         } else if (input == "W" || input == "w") {
             ledger->wipe();
         } else if (input == "B" || input == "b") {
-            balance(ledger, verbose, interactive);
+            balance(ledger, interactive, verbose);
         } else {
             promptHelp(input);
         }

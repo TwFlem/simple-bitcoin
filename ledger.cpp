@@ -15,7 +15,7 @@ Ledger::Ledger() {}
 
 bool Ledger::addTransaction(transaction trans) {
     if(!this->validateId(trans)) {
-        cout << ERR_TRANS_ID_TAKEN << trans.id << endl;
+        cerr << ERR_TRANS_ID_TAKEN << trans.id << endl;
         return false;
     }
 
@@ -93,15 +93,15 @@ bool Ledger::validateInput(transaction trans) {
         transaction prevTrans;
 
         if (!this->getTransaction(inUtxo.transactionId, prevTrans)) {
-            cout << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
+            cerr << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
             return false;
         }
 
         if (inUtxo.index > prevTrans.accounts.size() - 1) {
-            cout << ERR_TRANS_GENERIC << trans.id << endl;
-            cout << ERR_UTXO_INDEX_OOB << trans.id;
-            cout << " UTXO with transaction id: " << inUtxo.transactionId;
-            cout << " accounts size " << prevTrans.accounts.size() << " <= " << inUtxo.index << endl;
+            cerr << ERR_TRANS_GENERIC << trans.id << endl;
+            cerr << ERR_UTXO_INDEX_OOB << trans.id;
+            cerr << " UTXO with transaction id: " << inUtxo.transactionId;
+            cerr << " accounts size " << prevTrans.accounts.size() << " <= " << inUtxo.index << endl;
             return false;
         }
 
@@ -109,9 +109,9 @@ bool Ledger::validateInput(transaction trans) {
     }
 
     if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
-        cout << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
-        cout << sumOfAllUtxoin << " conflicts with this ";
-        cout << "transaction's output total of " << currTransSum << endl;
+        cerr << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
+        cerr << sumOfAllUtxoin << " conflicts with this ";
+        cerr << "transaction's output total of " << currTransSum << endl;
         return false;
     }
     return true;
@@ -171,12 +171,12 @@ transaction parseTransaction(string transStr) {
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
         if (transId == "") {
-            cout << INVALID_ID_BASE << transStr << endl;
+            cerr << INVALID_ID_BASE << transStr << endl;
         } else if (transId.length() != VALID_ID_LENGTH) {
-            cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
-            cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+            cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+            cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
         } else {
-            cout << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
+            cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
         }
         return transaction{};
     }
@@ -185,9 +185,9 @@ transaction parseTransaction(string transStr) {
 
     if(utxoCntStr == "" || !is_number(utxoCntStr)) {
         if (transId == "") {
-            cout << INVALID_UTXO_CNT_BASE << transStr << endl;
+            cerr << INVALID_UTXO_CNT_BASE << transStr << endl;
         } else {
-            cout << INVALID_UTXO_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+            cerr << INVALID_UTXO_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
         }
         return transaction{};
     }
@@ -196,27 +196,27 @@ transaction parseTransaction(string transStr) {
     try {
         utxoCnt = stoi(utxoCntStr);
     } catch (string &e) {
-        cout << e << endl;
+        cerr << e << endl;
         return transaction{};
     }
 
     if (utxoCnt == 0) {
         trimWhiteSpace(iterator, transStr);
         if(iterator >= transStr.length() || transStr[iterator] != SEMI_COLON) {
-            cout << "Error: utxo count mismatch." << endl;
+            cerr << "Error: utxo count mismatch." << endl;
             return transaction{};
         }
         iterator++;
     } else {
         utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
         if(utxos.size() == 0) {
-            cout << "Error: utxo mal formed" << endl;
+            cerr << "Error: utxo mal formed" << endl;
             return transaction{};
         }
     }
 
     if(utxoCnt != utxos.size()) {
-        cout << "Error: utxo count does match utxo size" << endl;
+        cerr << "Error: utxo count does match utxo size" << endl;
         return transaction{};
     }
 
@@ -224,9 +224,9 @@ transaction parseTransaction(string transStr) {
 
     if(voutCntStr == "" || !is_number(voutCntStr)) {
         if (voutCntStr == "") {
-            cout << INVALID_VOUT_CNT_BASE << transStr << endl;
+            cerr << INVALID_VOUT_CNT_BASE << transStr << endl;
         } else {
-            cout << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+            cerr << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
         }
         return transaction{};
     }
@@ -234,31 +234,31 @@ transaction parseTransaction(string transStr) {
     try {
         voutCnt = stoi(voutCntStr);
     } catch (string &e) {
-        cout << e << endl;
+        cerr << e << endl;
         return transaction{};
     }
 
     if (voutCnt == 0) {
-        cout << "Error: vout count must be at least 1." << endl;
+        cerr << "Error: vout count must be at least 1." << endl;
         return transaction{};
     } else {
         accounts = extractAccountPairs(iterator, transStr, voutCnt);
         if(accounts.size() == 0) {
-            cout << "Error: vout mal formed" << endl;
+            cerr << "Error: vout mal formed" << endl;
             return transaction{};
         }
     }
 
     if(voutCnt != accounts.size()) {
-        cout << "Error: vout count does match vout size" << endl;
+        cerr << "Error: vout count does match vout size" << endl;
         return transaction{};
     }
 
     trimWhiteSpace(iterator, transStr);
 
     if(iterator != transStr.length()) {
-        cout << "Error: mal formed transaction." << endl;
-        cout << iterator << " " << transStr.length() << endl;
+        cerr << "Error: mal formed transaction." << endl;
+        cerr << iterator << " " << transStr.length() << endl;
         return transaction{};
     }
 
@@ -278,7 +278,7 @@ string extractId(int &i, string transStr, char endingDelim) {
 
         if (isalnum(transStr[i])) {
             if (token.length() > 0) {
-                cout << "Error: transaction id mal formed." << endl;
+                cerr << "Error: transaction id mal formed." << endl;
                 token = "";
                 break;
             }
@@ -325,7 +325,7 @@ string extractPairCnt(int &i, string transStr, char endingDelim) {
         }
 
         if (!isspace(transStr[i]) && !isdigit(transStr[i]) && transStr[i] != endingDelim) {
-            cout << "Error: \"" << transStr[i] << "\" is not part of a valid utxo count." << endl;
+            cerr << "Error: \"" << transStr[i] << "\" is not part of a valid utxo count." << endl;
             return "";
         }
     }
@@ -354,12 +354,12 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                         string transId = idToLower(extractId(i, transStr, COMMA));
                         if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
                             if (transId == "") {
-                                cout << INVALID_ID_BASE << transStr << endl;
+                                cerr << INVALID_ID_BASE << transStr << endl;
                             } else if (transId.length() != VALID_ID_LENGTH) {
-                                cout << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
-                                cout << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+                                cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+                                cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
                             } else {
-                                cout << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
+                                cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
                             }
                             return emptyUtxo;
                         }
@@ -369,7 +369,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
                             string utxoIndexStr = extractPairCnt(i, transStr, CLOSING_PAREN);
 
                             if (!is_number(utxoIndexStr)) {
-                                cout << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
+                                cerr << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
                                 return emptyUtxo;
                             }
                             utxoIndex = stoi(utxoIndexStr);
@@ -390,7 +390,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
             }
 
             else {
-                cout << "Error: Missing (" << endl;
+                cerr << "Error: Missing (" << endl;
                 return emptyUtxo;
             }
         }
@@ -421,14 +421,14 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
                     if (isalnum(transStr[i])) {
                         string accId = extractId(i, transStr, COMMA);
                         if(accId == "") {
-                            cout << INVALID_ACC_ID_BASE << transStr << endl;
+                            cerr << INVALID_ACC_ID_BASE << transStr << endl;
                             return emptyAccs;
                         }
                         acc.accountId = accId;
                         while (transStr[i] != CLOSING_PAREN) {
                             string accAmtStr = extractPairCnt(i, transStr, CLOSING_PAREN);
                             if (accAmtStr == "" || !is_number(accAmtStr)) {
-                                cout << INVALID_VOUT_CNT_BASE << " in " << transStr << " must be numeric." << endl;
+                                cerr << INVALID_VOUT_CNT_BASE << " in " << transStr << " must be numeric." << endl;
                                 return emptyAccs;
                             }
                             acc.amt = stoi(accAmtStr);
@@ -448,7 +448,7 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
             }
 
             else {
-                cout << "Error: Missing (" << endl;
+                cerr << "Error: Missing (" << endl;
                 return emptyAccs;
             }
         }
@@ -465,7 +465,17 @@ void trimWhiteSpace(int &i, string transStr) {
 }
 
 bool is_number(const std::string& s) {
-    return !s.empty() && find_if(s.begin(), s.end(), [](char c) { return !isdigit(c); }) == s.end();
+    if (s.empty()) {
+        return false;
+    }
+
+    for(int i = 0; i < s.length(); i++) {
+        if(!isdigit(s[i])) {
+            return false;
+        }
+    }
+    return true;
+
 }
 
 bool isHex(const string s) {
