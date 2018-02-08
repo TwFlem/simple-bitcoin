@@ -16,7 +16,6 @@ int main() {
 
 
     while(input != "E" && input != "e") {
-        // why can't i do switch statements with strings!
         if (input == "H" || input == "h") {
             help();
         } else if (input == "I" || input == "i") {

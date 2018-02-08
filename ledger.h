@@ -32,7 +32,7 @@ typedef std::unordered_map<std::string, transaction> transactionMap;
 public:
     Ledger();
     Ledger(std::vector<transaction>);
-    bool addTransaction(transaction);
+    bool addTransaction(transaction, bool);
     bool getTransaction(std::string, transaction&);
     bool ledgerHasId(std::string);
     unsigned int sumAccountBalances(std::vector<account>);
