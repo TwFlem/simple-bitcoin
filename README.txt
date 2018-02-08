@@ -7,15 +7,17 @@ To run it, input the following into terminal:
 make
 ./ledger
 
-To recompile, run make clean and repeat the commands above.
+To recompile, run "make clean" and repeat the commands above.
 
 h/H will show a list of commands.
 
 Notes:
 
-When reading in a [F]ile, if any transaction is invalid, then none of the transactions
-are accepted prior to the invalid transaction are kept. Invalid single [T]ransactions
-do not wipe the history of the ledger.
+The original intent on reading from a [F]ile with a single incorrect
+transaction was to reject everything from the file and wipe the ledger.
+This was changed because it may make testing difficult.
+
+Invalid single [T]ransactions do not wipe the history of the ledger.
 
 Errors from running any command are always printed to cerr- regardless of whether
 verbose mode is off or on. The only things that are printed using [V]erbose are

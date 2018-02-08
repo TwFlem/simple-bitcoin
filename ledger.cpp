@@ -197,7 +197,7 @@ transaction parseTransaction(string transStr) {
     int iterator = 0;
 
     transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
-    string badTrans = "Error in transaction: " + transId;
+    string badTrans = transId + ": bad";
 
     if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
         if (transId == "") {

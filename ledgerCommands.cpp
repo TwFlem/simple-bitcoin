@@ -38,9 +38,8 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
     while (getline(file, transactionStr)) {
         if(transactionStr == "") continue;
         struct transaction newTrans = parseTransaction(transactionStr);
-        if(newTrans.id == "" || !ledger->addTransaction(newTrans, verbose)) {
-            ledger->wipe();
-            break;
+        if(newTrans.id != "") {
+            !ledger->addTransaction(newTrans, verbose);
         }
     }
     file.close();
