@@ -15,538 +15,550 @@ using namespace std;
 Ledger::Ledger() {}
 
 bool Ledger::addTransaction(transaction trans, bool verbose) {
-    if(!this->validateId(trans)) {
-        cerr << ERR_TRANS_ID_TAKEN << trans.id << endl;
-        cerr << trans.id << ": bad" << endl;
-        return false;
-    }
+  if(!this->validateId(trans)) {
+    cerr << ERR_TRANS_ID_TAKEN << trans.id << endl;
+    cerr << trans.id << ": bad" << endl;
+    return false;
+  }
 
 
-    if(!this->validateInput(trans)) {
-        cerr << trans.id << ": bad" << endl;
-        return false;
-    }
+  if(!this->validateInput(trans)) {
+    cerr << trans.id << ": bad" << endl;
+    return false;
+  }
 
 
-    this->transactionKeys.push_back(trans.id);
-    this->transactions.insert(pair<string, transaction>(trans.id, trans));
-    cout << trans.id << ": good" << endl;
-    return  true;
+  this->transactionKeys.push_back(trans.id);
+  this->transactions.insert(pair<string, transaction>(trans.id, trans));
+  cout << trans.id << ": good" << endl;
+  return  true;
 }
 
 void Ledger::print() {
-    cout << endl;
-    cout << this->getAllFmtTransactions() << endl;
+  cout << endl;
+  cout << this->getAllFmtTransactions() << endl;
 }
 
 void Ledger::getBalance(string s) {
-    int sum = 0;
-    for(int i = this->transactionKeys.size() - 1; i > 0; i--) {
-        vector<account> accs = this->transactions[this->transactionKeys.at(i)].accounts;
-        for(int j = 0; j < accs.size(); j++) {
-            if(accs.at(j).accountId == s && !accs.at(j).spent) {
-                sum += accs.at(j).amt;
-            }
-        }
+  int sum = 0;
+  for(int i = this->transactionKeys.size() - 1; i > 0; i--) {
+    vector<account> accs = this->transactions[this->transactionKeys.at(i)].accounts;
+    for(int j = 0; j < accs.size(); j++) {
+      if(accs.at(j).accountId == s && !accs.at(j).spent) {
+        sum += accs.at(j).amt;
+      }
     }
-    cout << s << " has " << sum << endl;
+  }
+  cout << s << " has " << sum << endl;
 }
 
 string Ledger::getAllFmtTransactions() {
-    string transactions = "";
-    for(auto const transId : this->transactionKeys) {
-        transaction trans = this->transactions.at(transId);
-        transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts) + "\n";
-    }
-    return transactions;
+  string transactions = "";
+  for(auto const transId : this->transactionKeys) {
+    transaction trans = this->transactions.at(transId);
+    transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts) + "\n";
+  }
+  return transactions;
 }
 
 void Ledger::wipe() {
-    std::vector<std::string> transactionKeys;
-    transactionMap transactions;
-    this->transactionKeys = transactionKeys;
-    this->transactions = transactions;
+  std::vector<std::string> transactionKeys;
+  transactionMap transactions;
+  this->transactionKeys = transactionKeys;
+  this->transactions = transactions;
 }
 
 int Ledger::size() {
-    return this->transactionKeys.size();
+  return this->transactionKeys.size();
 }
 
 bool Ledger::validateId(transaction trans) {
-    for(int i = 0; i < this->transactionKeys.size(); i++) {
-        if(this->transactionKeys.at(i) == trans.id) {
-            return false;
-        }
+  for(int i = 0; i < this->transactionKeys.size(); i++) {
+    if(this->transactionKeys.at(i) == trans.id) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
 bool Ledger::ledgerHasId(string id) {
-    for(int i = 0; i < this->transactionKeys.size(); i++) {
-        if(this->transactionKeys.at(i) == id) {
-            return true;
-        }
+  for(int i = 0; i < this->transactionKeys.size(); i++) {
+    if(this->transactionKeys.at(i) == id) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 bool Ledger::validateInput(transaction trans) {
-    unsigned int currTransSum = this->sumAccountBalances(trans.accounts);
-    unsigned int sumOfAllUtxoin = 0;
-    stack<utxo> utxoMarkedSpent;
-    for(int i = 0; i < trans.utxos.size(); i++) {
-        utxo inUtxo = trans.utxos.at(i);
-        transaction prevTrans;
+  unsigned int currTransSum = this->sumAccountBalances(trans.accounts);
+  unsigned int sumOfAllUtxoin = 0;
+  stack<utxo> utxoMarkedSpent;
+  string accountId;
+  bool accountIdSet = false;
+  for(int i = 0; i < trans.utxos.size(); i++) {
+    utxo inUtxo = trans.utxos.at(i);
+    transaction prevTrans;
 
-        if (!this->getTransaction(inUtxo.transactionId, prevTrans)) {
-            this->undoMarkUtxoSpents(utxoMarkedSpent);
-            cerr << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
-            return false;
-        }
-
-        if (inUtxo.index > prevTrans.accounts.size() - 1) {
-            this->undoMarkUtxoSpents(utxoMarkedSpent);
-            cerr << ERR_TRANS_GENERIC << trans.id << endl;
-            cerr << ERR_UTXO_INDEX_OOB << trans.id;
-            cerr << " UTXO with transaction id: " << inUtxo.transactionId;
-            cerr << " accounts size " << prevTrans.accounts.size() << " <= " << inUtxo.index << endl;
-            return false;
-        }
-
-        if(prevTrans.accounts.at(inUtxo.index).spent) {
-            this->undoMarkUtxoSpents(utxoMarkedSpent);
-            cerr << "Error in transaction " << trans.id << ": previous utxo in " << prevTrans.id << " belonging to ";
-            cerr << prevTrans.accounts.at(inUtxo.index).accountId << " has already been spent" << endl;
-            return false;
-        }
-        sumOfAllUtxoin +=  prevTrans.accounts.at(inUtxo.index).amt;
-        this->markUtxoSpent(inUtxo.transactionId, inUtxo.index, true);
-        utxoMarkedSpent.push(inUtxo);
+    if (!this->getTransaction(inUtxo.transactionId, prevTrans)) {
+      this->undoMarkUtxoSpents(utxoMarkedSpent);
+      cerr << ERR_TRANS_ID_DOES_NOT_EXIST << inUtxo.transactionId << endl;
+      return false;
     }
 
-    if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
-        this->undoMarkUtxoSpents(utxoMarkedSpent);
-        cerr << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
-        cerr << sumOfAllUtxoin << " conflicts with ";
-        cerr << "transaction " << trans.id << " output total of " << currTransSum << endl;
-        return false;
+    if (inUtxo.index > prevTrans.accounts.size() - 1) {
+      this->undoMarkUtxoSpents(utxoMarkedSpent);
+      cerr << ERR_TRANS_GENERIC << trans.id << endl;
+      cerr << ERR_UTXO_INDEX_OOB << trans.id;
+      cerr << " UTXO with transaction id: " << inUtxo.transactionId;
+      cerr << " accounts size " << prevTrans.accounts.size() << " <= " << inUtxo.index << endl;
+      return false;
     }
-    return true;
+
+    if(prevTrans.accounts.at(inUtxo.index).spent) {
+      this->undoMarkUtxoSpents(utxoMarkedSpent);
+      cerr << "Error in transaction " << trans.id << ": previous utxo in " << prevTrans.id << " belonging to ";
+      cerr << prevTrans.accounts.at(inUtxo.index).accountId << " has already been spent" << endl;
+      return false;
+    }
+
+    if(!accountIdSet) {
+      accountIdSet = true;
+      accountId = prevTrans.accounts.at(inUtxo.index).accountId;
+    } else if(accountId.compare(prevTrans.accounts.at(inUtxo.index).accountId) != 0) {
+      this->undoMarkUtxoSpents(utxoMarkedSpent);
+      cerr << "Error in transaction " << trans.id << ": previous utxo in " << prevTrans.id << " belonging to ";
+      cerr << "All utxo input account ids should be " << accountId << endl;
+      return false;
+    }
+    sumOfAllUtxoin +=  prevTrans.accounts.at(inUtxo.index).amt;
+    this->markUtxoSpent(inUtxo.transactionId, inUtxo.index, true);
+    utxoMarkedSpent.push(inUtxo);
+  }
+
+  if (trans.utxos.size() > 0 && currTransSum != sumOfAllUtxoin) {
+    this->undoMarkUtxoSpents(utxoMarkedSpent);
+    cerr << ERR_UTXO_ACC_MISMATCH << "previous transaction input balance ";
+    cerr << sumOfAllUtxoin << " conflicts with ";
+    cerr << "transaction " << trans.id << " output total of " << currTransSum << endl;
+    return false;
+  }
+  return true;
 }
 
 
 void Ledger::undoMarkUtxoSpents(stack<utxo> utxos) {
-    while(!utxos.empty()) {
-        utxo u = utxos.top();
-        this->markUtxoSpent(u.transactionId, u.index, false);
-        utxos.pop();
-    }
+  while(!utxos.empty()) {
+    utxo u = utxos.top();
+    this->markUtxoSpent(u.transactionId, u.index, false);
+    utxos.pop();
+  }
 }
 
 void Ledger::markUtxoSpent(string id, int utxoIndex, bool value) {
-    this->transactions[id].accounts.at(utxoIndex).spent = value;
+  this->transactions[id].accounts.at(utxoIndex).spent = value;
 }
 
 bool Ledger::getTransaction(string id, transaction &trans) {
-    bool valid = this->ledgerHasId(id);
-    if (valid) {
-        trans = this->transactions[id];
-    }
-    return valid;
+  bool valid = this->ledgerHasId(id);
+  if (valid) {
+    trans = this->transactions[id];
+  }
+  return valid;
 }
 
 unsigned int Ledger::sumAccountBalances(std::vector<account> accs) {
-    unsigned int sum = 0;
-    for(int i = 0; i < accs.size(); i++) {
-        sum += accs.at(i).amt;
-    }
-    return sum;
+  unsigned int sum = 0;
+  for(int i = 0; i < accs.size(); i++) {
+    sum += accs.at(i).amt;
+  }
+  return sum;
 }
 
 string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
-    string transStr = "";
-    transStr = transStr + transId + "; " + to_string(utxos.size()) + "; ";
+  string transStr = "";
+  transStr = transStr + transId + "; " + to_string(utxos.size()) + "; ";
 
-    if (utxos.size() == 0) transStr = transStr + "; ";
+  if (utxos.size() == 0) transStr = transStr + "; ";
 
-    for(int i = 0; i < utxos.size(); i++) {
-        utxo currUtxo = utxos.at(i);
-        transStr = transStr + "(" + currUtxo.transactionId + ", " + to_string(currUtxo.index) + ")";
+  for(int i = 0; i < utxos.size(); i++) {
+    utxo currUtxo = utxos.at(i);
+    transStr = transStr + "(" + currUtxo.transactionId + ", " + to_string(currUtxo.index) + ")";
 
-        if (i == utxos.size() - 1) transStr = transStr + "; ";
-    }
+    if (i == utxos.size() - 1) transStr = transStr + "; ";
+  }
 
-    transStr = transStr + to_string(accounts.size()) + "; ";
+  transStr = transStr + to_string(accounts.size()) + "; ";
 
-    for(int i = 0; i < accounts.size(); i++) {
-        account currAccount = accounts.at(i);
-        transStr = transStr + "(" + currAccount.accountId + ", " + to_string(currAccount.amt) + ")";
-    }
-    return transStr;
+  for(int i = 0; i < accounts.size(); i++) {
+    account currAccount = accounts.at(i);
+    transStr = transStr + "(" + currAccount.accountId + ", " + to_string(currAccount.amt) + ")";
+  }
+  return transStr;
 }
 
 transaction parseTransaction(string transStr) {
-    string transId;
-    int utxoCnt;
-    int voutCnt;
-    transaction trans;
-    vector<utxo> utxos;
-    vector<account> accounts;
-    transaction emptyTrans = transaction{ transId, utxos, accounts };
+  string transId;
+  int utxoCnt;
+  int voutCnt;
+  transaction trans;
+  vector<utxo> utxos;
+  vector<account> accounts;
+  transaction emptyTrans = transaction{ transId, utxos, accounts };
 
-    int iterator = 0;
+  int iterator = 0;
 
-    transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
-    string badTrans = transId + ": bad";
+  transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
+  string badTrans = transId + ": bad";
 
-    if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
-        if (transId == "") {
-            cerr << INVALID_ID_BASE << transStr << endl;
-        } else if (transId.length() != VALID_ID_LENGTH) {
-            cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
-            cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
-        } else {
-            cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
-        }
-        return transaction{};
-    }
-
-    string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
-
-    if(utxoCntStr == "" || !is_number(utxoCntStr)) {
-        if (utxoCntStr == "") {
-            cerr << INVALID_UTXO_CNT_BASE << endl;
-            cerr << badTrans << endl;
-        } else {
-            cerr << INVALID_UTXO_CNT_BASE << utxoCnt << " in " << transStr << " must be numeric." << endl;
-            cerr << badTrans << endl;
-        }
-        return transaction{};
-    }
-
-
-    try {
-        utxoCnt = stoi(utxoCntStr);
-    } catch (string &e) {
-        cerr << e << endl;
-        cerr << badTrans << endl;
-        return transaction{};
-    }
-
-    if (utxoCnt == 0) {
-        trimWhiteSpace(iterator, transStr);
-        if(iterator >= transStr.length() || transStr[iterator] != SEMI_COLON) {
-            cerr << "Error: utxo count mismatch." << endl;
-            cerr << badTrans << endl;
-            return transaction{};
-        }
-        iterator++;
+  if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
+    if (transId == "") {
+      cerr << INVALID_ID_BASE << transStr << endl;
+    } else if (transId.length() != VALID_ID_LENGTH) {
+      cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+      cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
     } else {
-        utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
-        if(utxos.size() == 0) {
-            cerr << "Error: utxo mal formed" << endl;
-            cerr << badTrans << endl;
-            return transaction{};
-        }
+      cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
     }
+    return transaction{};
+  }
 
-    if(utxoCnt != utxos.size()) {
-        cerr << "Error: utxo count does not match utxo size" << endl;
-        cerr << badTrans << endl;
-        return transaction{};
-    }
+  string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
 
-    string voutCntStr = extractId(iterator, transStr, SEMI_COLON);
-
-    if(voutCntStr == "" || !is_number(voutCntStr)) {
-        if (voutCntStr == "") {
-            cerr << INVALID_VOUT_CNT_BASE << endl;
-            cerr << badTrans << endl;
-        } else {
-            cerr << INVALID_VOUT_CNT_BASE << voutCntStr << " in " << transStr << " must be numeric." << endl;
-            cerr << badTrans << endl;
-        }
-        return transaction{};
-    }
-
-    try {
-        voutCnt = stoi(voutCntStr);
-    } catch (string &e) {
-        cerr << e << endl;
-        cerr << badTrans << endl;
-        return transaction{};
-    }
-
-    if (voutCnt == 0) {
-        cerr << "Error: Account pair count must be at least 1." << endl;
-        cerr << badTrans << endl;
-        return transaction{};
+  if(utxoCntStr == "" || !is_number(utxoCntStr)) {
+    if (utxoCntStr == "") {
+      cerr << INVALID_UTXO_CNT_BASE << endl;
+      cerr << badTrans << endl;
     } else {
-        accounts = extractAccountPairs(iterator, transStr, voutCnt);
-        if(accounts.size() == 0) {
-            cerr << "Error: Account pair mal formed" << endl;
-            cerr << badTrans << endl;
-            return transaction{};
-        }
+      cerr << INVALID_UTXO_CNT_BASE << utxoCnt << " in " << transStr << " must be numeric." << endl;
+      cerr << badTrans << endl;
     }
+    return transaction{};
+  }
 
-    if(voutCnt != accounts.size()) {
-        cerr << "Error: Account pair count does match Account pair size" << endl;
-        cerr << badTrans << endl;
-        return transaction{};
-    }
 
+  try {
+    utxoCnt = stoi(utxoCntStr);
+  } catch (string &e) {
+    cerr << e << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  }
+
+  if (utxoCnt == 0) {
     trimWhiteSpace(iterator, transStr);
-
-    if(iterator != transStr.length()) {
-        cerr << "Error: mal formed transaction." << endl;
-        cerr << badTrans << endl;
-        return transaction{};
+    if(iterator >= transStr.length() || transStr[iterator] != SEMI_COLON) {
+      cerr << "Error: utxo count mismatch." << endl;
+      cerr << badTrans << endl;
+      return transaction{};
     }
+    iterator++;
+  } else {
+    utxos = extractUtxoPairs(iterator, transStr, utxoCnt);
+    if(utxos.size() == 0) {
+      cerr << "Error: utxo mal formed" << endl;
+      cerr << badTrans << endl;
+      return transaction{};
+    }
+  }
 
-    return transaction{
-            transId,
-            utxos,
-            accounts
-    };
+  if(utxoCnt != utxos.size()) {
+    cerr << "Error: utxo count does not match utxo size" << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  }
+
+  string voutCntStr = extractId(iterator, transStr, SEMI_COLON);
+
+  if(voutCntStr == "" || !is_number(voutCntStr)) {
+    if (voutCntStr == "") {
+      cerr << INVALID_VOUT_CNT_BASE << endl;
+      cerr << badTrans << endl;
+    } else {
+      cerr << INVALID_VOUT_CNT_BASE << voutCntStr << " in " << transStr << " must be numeric." << endl;
+      cerr << badTrans << endl;
+    }
+    return transaction{};
+  }
+
+  try {
+    voutCnt = stoi(voutCntStr);
+  } catch (string &e) {
+    cerr << e << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  }
+
+  if (voutCnt == 0) {
+    cerr << "Error: Account pair count must be at least 1." << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  } else {
+    accounts = extractAccountPairs(iterator, transStr, voutCnt);
+    if(accounts.size() == 0) {
+      cerr << "Error: Account pair mal formed" << endl;
+      cerr << badTrans << endl;
+      return transaction{};
+    }
+  }
+
+  if(voutCnt != accounts.size()) {
+    cerr << "Error: Account pair count does match Account pair size" << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  }
+
+  trimWhiteSpace(iterator, transStr);
+
+  if(iterator != transStr.length()) {
+    cerr << "Error: mal formed transaction." << endl;
+    cerr << badTrans << endl;
+    return transaction{};
+  }
+
+  return transaction{
+      transId,
+      utxos,
+      accounts
+  };
 }
 
 string extractId(int &i, string transStr, char endingDelim) {
-    string token = "";
-    for (i; i < transStr.length(); i++) {
-        if (isspace(transStr[i])) continue;
+  string token = "";
+  for (i; i < transStr.length(); i++) {
+    if (isspace(transStr[i])) continue;
 
-        if (isalnum(transStr[i])) {
-            if (token.length() > 0) {
-                cerr << "Error: transaction id mal formed." << endl;
-                token = "";
-                break;
-            }
-            while(isalnum(transStr[i])) {
-                token = token + transStr[i];
-                i++;
-            }
+    if (isalnum(transStr[i])) {
+      if (token.length() > 0) {
+        cerr << "Error: transaction id mal formed." << endl;
+        token = "";
+        break;
+      }
+      while(isalnum(transStr[i])) {
+        token = token + transStr[i];
+        i++;
+      }
 
-            i--;
-            continue;
-        }
-
-        if (transStr[i] == endingDelim) {
-            i++;
-            break;
-        }
-
-        if (!isspace(transStr[i]) && !isalnum(transStr[i])) {
-            token = "";
-            break;
-        }
+      i--;
+      continue;
     }
-    return token;
+
+    if (transStr[i] == endingDelim) {
+      i++;
+      break;
+    }
+
+    if (!isspace(transStr[i]) && !isalnum(transStr[i])) {
+      token = "";
+      break;
+    }
+  }
+  return token;
 }
 
 string extractPairCnt(int &i, string transStr, char endingDelim) {
-    string token = "";
-    for (i; i < transStr.length(); i++) {
-        if (isspace(transStr[i])) continue;
+  string token = "";
+  for (i; i < transStr.length(); i++) {
+    if (isspace(transStr[i])) continue;
 
-        if (isdigit(transStr[i])) {
-            while(isdigit(transStr[i])) {
-                token = token + transStr[i];
-                i++;
-            }
-            i--;
-            continue;
-        }
-
-        if (transStr[i] == endingDelim) {
-            i++;
-            break;
-        }
-
-        if (!isspace(transStr[i]) && !isdigit(transStr[i]) && transStr[i] != endingDelim) {
-            cerr << "Error: \"" << transStr[i] << "\" is not part of a valid utxo count." << endl;
-            return "";
-        }
+    if (isdigit(transStr[i])) {
+      while(isdigit(transStr[i])) {
+        token = token + transStr[i];
+        i++;
+      }
+      i--;
+      continue;
     }
-    return token;
+
+    if (transStr[i] == endingDelim) {
+      i++;
+      break;
+    }
+
+    if (!isspace(transStr[i]) && !isdigit(transStr[i]) && transStr[i] != endingDelim) {
+      cerr << "Error: \"" << transStr[i] << "\" is not part of a valid utxo count." << endl;
+      return "";
+    }
+  }
+  return token;
 }
 
 vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
-    vector<utxo> utxos;
-    vector<utxo> emptyUtxo;
-    string token = "";
+  vector<utxo> utxos;
+  vector<utxo> emptyUtxo;
+  string token = "";
 
-    for (int x = 0; x < utxoNum; x++) {
-        utxo ut;
-        for (i; i < transStr.length(); i++) {
+  for (int x = 0; x < utxoNum; x++) {
+    utxo ut;
+    for (i; i < transStr.length(); i++) {
 
-            if (isspace(transStr[i])) continue;
+      if (isspace(transStr[i])) continue;
 
-            else if (transStr[i] == '(') {
-                //TODO: account for no )
-                bool complete = false;
-                while (!complete) {
-                    i++;
-                    if (isspace(transStr[i])) continue;
+      else if (transStr[i] == '(') {
+        //TODO: account for no )
+        bool complete = false;
+        while (!complete) {
+          i++;
+          if (isspace(transStr[i])) continue;
 
-                    if (isalnum(transStr[i])) {
-                        string transId = idToLower(extractId(i, transStr, COMMA));
-                        if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
-                            if (transId == "") {
-                                cerr << INVALID_ID_BASE << transStr << endl;
-                            } else if (transId.length() != VALID_ID_LENGTH) {
-                                cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
-                                cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
-                            } else {
-                                cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
-                            }
-                            return emptyUtxo;
-                        }
-                        ut.transactionId = transId;
-                        while (transStr[i] != CLOSING_PAREN) {
-                            unsigned int utxoIndex;
-                            string utxoIndexStr = extractPairCnt(i, transStr, CLOSING_PAREN);
-
-                            if (!is_number(utxoIndexStr)) {
-                                cerr << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
-                                return emptyUtxo;
-                            }
-                            utxoIndex = stoi(utxoIndexStr);
-                            ut.index = utxoIndex;
-                            complete = true;
-                            break;
-                        }
-                    }
-
-                }
-                utxos.push_back(ut);
-                break;
+          if (isalnum(transStr[i])) {
+            string transId = idToLower(extractId(i, transStr, COMMA));
+            if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
+              if (transId == "") {
+                cerr << INVALID_ID_BASE << transStr << endl;
+              } else if (transId.length() != VALID_ID_LENGTH) {
+                cerr << INVALID_ID_BASE << transId << " in " << transStr << " has invalid length of ";
+                cerr << transId.length() << ". Should be " << VALID_ID_LENGTH << "." << endl;
+              } else {
+                cerr << INVALID_ID_BASE << "id " << transId << " is not a hexadecimal number." << endl;
+              }
+              return emptyUtxo;
             }
+            ut.transactionId = transId;
+            while (transStr[i] != CLOSING_PAREN) {
+              unsigned int utxoIndex;
+              string utxoIndexStr = extractPairCnt(i, transStr, CLOSING_PAREN);
 
-            else if (transStr[i] == ';') {
-                i++;
-                break;
-            }
-
-            else {
-                cerr << "Error: Missing ( for " << transStr << endl;
+              if (!is_number(utxoIndexStr)) {
+                cerr << INVALID_VOUT_CNT_BASE << transId << " in " << transStr << " must be numeric." << endl;
                 return emptyUtxo;
+              }
+              utxoIndex = stoi(utxoIndexStr);
+              ut.index = utxoIndex;
+              complete = true;
+              break;
             }
+          }
+
         }
-    }
-    //TODO: fix this
-    trimWhiteSpace(i, transStr);
-    if(transStr[i] == ';') {
+        utxos.push_back(ut);
+        break;
+      }
+
+      else if (transStr[i] == ';') {
         i++;
+        break;
+      }
+
+      else {
+        cerr << "Error: Missing ( for " << transStr << endl;
+        return emptyUtxo;
+      }
     }
-    return utxos;
+  }
+  //TODO: fix this
+  trimWhiteSpace(i, transStr);
+  if(transStr[i] == ';') {
+    i++;
+  }
+  return utxos;
 }
 
 vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
-    vector<account> accounts;
-    vector<account> emptyAccs;
-    string token = "";
+  vector<account> accounts;
+  vector<account> emptyAccs;
+  string token = "";
 
-    for (int x = 0; x < accNum; x++) {
-        account acc;
-        for (i; i < transStr.length(); i++) {
+  for (int x = 0; x < accNum; x++) {
+    account acc;
+    for (i; i < transStr.length(); i++) {
 
-            if (isspace(transStr[i])) continue;
+      if (isspace(transStr[i])) continue;
 
-            else if (transStr[i] == '(') {
-                //TODO: account for no )
-                bool complete = false;
-                while (!complete) {
-                    i++;
-                    if (isspace(transStr[i])) continue;
+      else if (transStr[i] == '(') {
+        //TODO: account for no )
+        bool complete = false;
+        while (!complete) {
+          i++;
+          if (isspace(transStr[i])) continue;
 
-                    if (isalnum(transStr[i])) {
-                        string accId = extractId(i, transStr, COMMA);
-                        if(accId == "") {
-                            cerr << INVALID_ACC_ID_BASE << transStr << endl;
-                            return emptyAccs;
-                        }
-                        acc.accountId = accId;
-                        while (transStr[i] != CLOSING_PAREN) {
-                            string accAmtStr = extractPairCnt(i, transStr, CLOSING_PAREN);
-                            if (accAmtStr == "" || !is_number(accAmtStr)) {
-                                cerr << INVALID_VOUT_CNT_BASE << " in " << transStr << " must be numeric." << endl;
-                                return emptyAccs;
-                            }
-                            acc.amt = stoi(accAmtStr);
-                            complete = true;
-                            break;
-                        }
-                    }
-
-                }
-                acc.spent = false;
-                accounts.push_back(acc);
-                break;
+          if (isalnum(transStr[i])) {
+            string accId = extractId(i, transStr, COMMA);
+            if(accId == "") {
+              cerr << INVALID_ACC_ID_BASE << transStr << endl;
+              return emptyAccs;
             }
-
-            else if (transStr[i] == ';') {
-                i++;
-                break;
-            }
-
-            else {
-                cerr << "Error: Missing (" << endl;
+            acc.accountId = accId;
+            while (transStr[i] != CLOSING_PAREN) {
+              string accAmtStr = extractPairCnt(i, transStr, CLOSING_PAREN);
+              if (accAmtStr == "" || !is_number(accAmtStr)) {
+                cerr << INVALID_VOUT_CNT_BASE << " in " << transStr << " must be numeric." << endl;
                 return emptyAccs;
+              }
+              acc.amt = stoi(accAmtStr);
+              complete = true;
+              break;
             }
+          }
+
         }
+        acc.spent = false;
+        accounts.push_back(acc);
+        break;
+      }
+
+      else if (transStr[i] == ';') {
+        i++;
+        break;
+      }
+
+      else {
+        cerr << "Error: Missing (" << endl;
+        return emptyAccs;
+      }
     }
-    return accounts;
+  }
+  return accounts;
 }
 
 void scanToDelim(int &i, string transStr, char endingDelim) {
-    while (transStr[i] != endingDelim) i++;
+  while (transStr[i] != endingDelim) i++;
 }
 
 void trimWhiteSpace(int &i, string transStr) {
-    while (isspace(transStr[i])) i++;
+  while (isspace(transStr[i])) i++;
 }
 
 bool is_number(const std::string& s) {
-    if (s.empty()) {
-        return false;
-    }
+  if (s.empty()) {
+    return false;
+  }
 
-    for(int i = 0; i < s.length(); i++) {
-        if(!isdigit(s[i])) {
-            return false;
-        }
+  for(int i = 0; i < s.length(); i++) {
+    if(!isdigit(s[i])) {
+      return false;
     }
-    return true;
+  }
+  return true;
 
 }
 
 bool isHex(const string s) {
-    for(int i = 0; i < s.length(); i++) {
-        char c = s[i];
-        if (isalpha(c)) c = tolower(c);
-        if (c == 'a'
-            || c == 'b'
-            || c == 'c'
-            || c == 'd'
-            || c == 'e'
-            || c == 'f'
-            || isdigit(c)) {
-            continue;
-        }
-        return false;
+  for(int i = 0; i < s.length(); i++) {
+    char c = s[i];
+    if (isalpha(c)) c = tolower(c);
+    if (c == 'a'
+      || c == 'b'
+      || c == 'c'
+      || c == 'd'
+      || c == 'e'
+      || c == 'f'
+      || isdigit(c)) {
+      continue;
     }
-    return true;
+    return false;
+  }
+  return true;
 }
 
 string idToLower(string s) {
-    string newStr = "";
+  string newStr = "";
    for(int i = 0; i < s.length(); i++) {
-       char c = s[i];
-       if (isalpha(c)) {
-           c = tolower(c);
-       }
-       newStr = newStr + c;
+     char c = s[i];
+     if (isalpha(c)) {
+       c = tolower(c);
+     }
+     newStr = newStr + c;
    }
-    return newStr;
+  return newStr;
 }

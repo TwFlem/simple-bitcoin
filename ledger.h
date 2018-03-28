@@ -13,18 +13,20 @@
 #include <unordered_map>
 
 struct utxo {
-    std::string transactionId;
-    unsigned int index;
+  std::string transactionId;
+  unsigned int index;
 };
 struct account {
-    std::string accountId;
-    unsigned int amt;
-    bool spent;
+  std::string accountId;
+  unsigned int amt;
+  bool spent;
 };
 struct transaction{
-    std::string id;
-    std::vector <utxo> utxos;
-    std::vector <account> accounts;
+  std::string id;
+  std::vector <utxo> utxos;
+  std::vector <account> accounts;
+  std::string privateKey;
+  std::string publicKey;
 };
 
 class Ledger {
@@ -32,24 +34,24 @@ class Ledger {
 typedef std::unordered_map<std::string, transaction> transactionMap;
 
 public:
-    Ledger();
-    bool addTransaction(transaction, bool);
-    bool getTransaction(std::string, transaction&);
-    bool ledgerHasId(std::string);
-    unsigned int sumAccountBalances(std::vector<account>);
-    void print();
-    std::string getAllFmtTransactions();
-    void wipe();
-    int size();
-    void getBalance(std::string);
+  Ledger();
+  bool addTransaction(transaction, bool);
+  bool getTransaction(std::string, transaction&);
+  bool ledgerHasId(std::string);
+  unsigned int sumAccountBalances(std::vector<account>);
+  void print();
+  std::string getAllFmtTransactions();
+  void wipe();
+  int size();
+  void getBalance(std::string);
 private:
-    std::vector<std::string> transactionKeys;
-    transactionMap transactions;
-    transaction findTransaction(unsigned int);
-    bool validateId(transaction);
-    bool validateInput(transaction);
-    void markUtxoSpent(std::string, int, bool);
-    void undoMarkUtxoSpents(std::stack<utxo>);
+  std::vector<std::string> transactionKeys;
+  transactionMap transactions;
+  transaction findTransaction(unsigned int);
+  bool validateId(transaction);
+  bool validateInput(transaction);
+  void markUtxoSpent(std::string, int, bool);
+  void undoMarkUtxoSpents(std::stack<utxo>);
 };
 
 std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>);
