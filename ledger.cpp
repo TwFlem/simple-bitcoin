@@ -56,7 +56,7 @@ string Ledger::getAllFmtTransactions() {
   string transactions = "";
   for(auto const transId : this->transactionKeys) {
     transaction trans = this->transactions.at(transId);
-    transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts, true) + "\n";
+    transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts, false) + "\n";
   }
   return transactions;
 }
