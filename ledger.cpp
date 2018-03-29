@@ -56,7 +56,7 @@ string Ledger::getAllFmtTransactions() {
   string transactions = "";
   for(auto const transId : this->transactionKeys) {
     transaction trans = this->transactions.at(transId);
-    transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts) + "\n";
+    transactions = transactions + fmtTrans(transId, trans.utxos, trans.accounts, true) + "\n";
   }
   return transactions;
 }
@@ -175,9 +175,13 @@ unsigned int Ledger::sumAccountBalances(std::vector<account> accs) {
   return sum;
 }
 
-string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
+string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts, bool gettingHashStr) {
   string transStr = "";
-  transStr = transStr + transId + "; " + to_string(utxos.size()) + "; ";
+  if(!gettingHashStr) {
+      transStr = transStr + transId + "; ";
+  }
+
+  transStr = transStr + to_string(utxos.size()) + "; ";
 
   if (utxos.size() == 0) transStr = transStr + "; ";
 
@@ -194,6 +198,7 @@ string fmtTrans(string transId, vector<utxo> utxos, vector<account> accounts) {
     account currAccount = accounts.at(i);
     transStr = transStr + "(" + currAccount.accountId + ", " + to_string(currAccount.amt) + ")";
   }
+
   return transStr;
 }
 
@@ -561,4 +566,8 @@ string idToLower(string s) {
      newStr = newStr + c;
    }
   return newStr;
+}
+
+string getHashStr(transaction trans) {
+    return fmtTrans("", trans.utxos, trans.accounts, true);
 }

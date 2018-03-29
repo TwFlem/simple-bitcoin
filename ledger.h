@@ -54,7 +54,7 @@ private:
   void undoMarkUtxoSpents(std::stack<utxo>);
 };
 
-std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>);
+std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>, bool);
 transaction parseTransaction(std::string);
 std::string extractId(int&, std::string, char);
 std::string extractPairCnt(int&, std::string, char);
@@ -65,5 +65,6 @@ void scanToDelim(int&, std::string, char);
 void trimWhiteSpace(int&, std::string);
 std::string idToLower(std::string);
 bool isHex(const std::string);
+std::string getHashStr(transaction);
 
 #endif //SIMPLE_BITCOIN_LEDGER_H
