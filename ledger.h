@@ -29,6 +29,7 @@ struct transaction{
   std::string privateKey;
   std::string publicKey;
     std::string signature;
+    bool output;
 };
 
 class Ledger {
@@ -46,6 +47,7 @@ public:
   void wipe();
   int size();
   void getBalance(std::string);
+  void outputBlock();
 private:
   std::vector<std::string> transactionKeys;
   transactionMap transactions;

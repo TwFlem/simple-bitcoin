@@ -81,6 +81,24 @@ bool Ledger::validateId(transaction trans) {
   return true;
 }
 
+void Ledger::outputBlock() {
+    vector<string> fmtOutput;
+    for(auto const transId: this->transactionKeys) {
+        transaction trans = this->transactions.at(transId);
+        if(!trans.output && trans.signature.length() > 0) {
+            this->transactions.at(transId).output = true;
+            string outputStr = fmtTrans(transId, trans.utxos, trans.accounts, false) + "\n" + trans.signature;
+            fmtOutput.push_back(outputStr);
+        }
+    }
+
+    cout << fmtOutput.size() << endl;
+    for(auto const outputStr: fmtOutput) {
+        cout << outputStr << endl;
+    }
+    cout << endl;
+}
+
 bool Ledger::ledgerHasId(string id) {
   for(int i = 0; i < this->transactionKeys.size(); i++) {
     if(this->transactionKeys.at(i) == id) {

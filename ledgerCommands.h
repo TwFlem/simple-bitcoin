@@ -8,5 +8,6 @@ void file(Ledger*, bool, bool);
 void transaction(Ledger*, bool, bool);
 void dump(Ledger*, bool, bool);
 void balance(Ledger*, bool, bool);
+void output(Ledger*);
 
 #endif

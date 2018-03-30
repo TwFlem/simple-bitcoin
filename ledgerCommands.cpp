@@ -124,3 +124,7 @@ void balance(Ledger* ledger, bool interactive, bool verbose) {
 
     ledger->getBalance(accName);
 }
+
+void output(Ledger* ledger) {
+    ledger->outputBlock();
+}
