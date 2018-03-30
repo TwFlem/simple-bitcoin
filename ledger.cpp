@@ -213,7 +213,7 @@ transaction parseTransaction(string transStr) {
 
   int iterator = 0;
 
-  transId = idToLower(extractId(iterator, transStr, SEMI_COLON));
+  transId = idToLower(extractId(iterator, transStr, SEMI_COLON, false));
   string badTrans = transId + ": bad";
 
   if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
@@ -228,7 +228,7 @@ transaction parseTransaction(string transStr) {
     return transaction{};
   }
 
-  string utxoCntStr = extractId(iterator, transStr, SEMI_COLON);
+  string utxoCntStr = extractId(iterator, transStr, SEMI_COLON, false);
 
   if(utxoCntStr == "" || !is_number(utxoCntStr)) {
     if (utxoCntStr == "") {
@@ -273,7 +273,7 @@ transaction parseTransaction(string transStr) {
     return transaction{};
   }
 
-  string voutCntStr = extractId(iterator, transStr, SEMI_COLON);
+  string voutCntStr = extractId(iterator, transStr, SEMI_COLON, false);
 
   if(voutCntStr == "" || !is_number(voutCntStr)) {
     if (voutCntStr == "") {
@@ -328,14 +328,16 @@ transaction parseTransaction(string transStr) {
   };
 }
 
-string extractId(int &i, string transStr, char endingDelim) {
+string extractId(int &i, string transStr, char endingDelim, bool checkingIfSig) {
   string token = "";
   for (i; i < transStr.length(); i++) {
     if (isspace(transStr[i])) continue;
 
     if (isalnum(transStr[i])) {
       if (token.length() > 0) {
-        cerr << "Error: transaction id mal formed." << endl;
+          if(!checkingIfSig) {
+              cerr << "Error: transaction id mal formed." << endl;
+          }
         token = "";
         break;
       }
@@ -407,7 +409,7 @@ vector<utxo> extractUtxoPairs(int &i, string transStr, int utxoNum) {
           if (isspace(transStr[i])) continue;
 
           if (isalnum(transStr[i])) {
-            string transId = idToLower(extractId(i, transStr, COMMA));
+              string transId = idToLower(extractId(i, transStr, COMMA, false));
             if (transId == "" || transId.length() != VALID_ID_LENGTH || !isHex(transId)) {
               if (transId == "") {
                 cerr << INVALID_ID_BASE << transStr << endl;
@@ -478,7 +480,7 @@ vector<account> extractAccountPairs(int &i, string transStr, int accNum) {
           if (isspace(transStr[i])) continue;
 
           if (isalnum(transStr[i])) {
-            string accId = extractId(i, transStr, COMMA);
+              string accId = extractId(i, transStr, COMMA, false);
             if(accId == "") {
               cerr << INVALID_ACC_ID_BASE << transStr << endl;
               return emptyAccs;

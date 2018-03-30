@@ -22,6 +22,8 @@ void help() {
 void file(Ledger* ledger, bool interactive, bool verbose) {
     string filename;
     string transactionStr;
+    string possibleSig;
+    bool hadSig = true;
 
     if (interactive) cout << "Enter a filename to generate a ledger" << endl;
 
@@ -35,10 +37,38 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
     }
 
 
-    while (getline(file, transactionStr)) {
-        if(transactionStr == "") continue;
+    while (true) {
+        if(hadSig) {
+            if(!getline(file, transactionStr)) {
+                break;
+            }
+        }
+
+        if(transactionStr == "") {
+            hadSig = true;
+            continue;
+        }
+
         struct transaction newTrans = parseTransaction(transactionStr);
+
+        // account for possible signature on next line
+        if(!getline(file, possibleSig)) {
+            if(newTrans.id != "") {
+                !ledger->addTransaction(newTrans, verbose);
+            }
+            break;
+        }
+
+        if(isHex(possibleSig)) {
+            newTrans.signature = possibleSig;
+            hadSig = true;
+        } else {
+            transactionStr = possibleSig;
+            hadSig = false;
+        }
+
         if(newTrans.id != "") {
+            if(verbose) cout << newTrans.id << " has signature of: " << newTrans.signature << endl;
             !ledger->addTransaction(newTrans, verbose);
         }
     }

@@ -5,6 +5,7 @@
 #define SEMI_COLON ';'
 #define COMMA ','
 #define CLOSING_PAREN ')'
+#define NEWLINE '\n'
 
 #include <map>
 #include <vector>
@@ -27,6 +28,7 @@ struct transaction{
   std::vector <account> accounts;
   std::string privateKey;
   std::string publicKey;
+    std::string signature;
 };
 
 class Ledger {
@@ -56,7 +58,7 @@ private:
 
 std::string fmtTrans(std::string, std::vector<utxo>, std::vector<account>, bool);
 transaction parseTransaction(std::string);
-std::string extractId(int&, std::string, char);
+std::string extractId(int&, std::string, char, bool);
 std::string extractPairCnt(int&, std::string, char);
 std::vector<utxo> extractUtxoPairs(int&, std::string, int);
 std::vector<account> extractAccountPairs(int&, std::string, int);
