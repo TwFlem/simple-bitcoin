@@ -1,9 +1,14 @@
 #include <iostream>
+#include <stdio.h>
 #include <fstream>
 #include <utility>
+#include <openssl/pem.h>
+#include <openssl/rsa.h>
+#include <openssl/evp.h>
 #include "ledgerCommands.h"
 #include "descriptions.h"
 #include "ledger.h"
+
 using namespace std;
 
 void help() {
@@ -127,4 +132,68 @@ void balance(Ledger* ledger, bool interactive, bool verbose) {
 
 void output(Ledger* ledger) {
     ledger->outputBlock();
+}
+
+void readKeyFile(unordered_map<string, EVP_PKEY*>* accCryptoKeys, bool interactive, bool verbose) {
+    string input;
+    string token = "";
+    vector<string> tokens;
+    string accountId;
+    string filename;
+    EVP_PKEY* pkey;
+    if (interactive) cout << "Enter an <accountId> <keyFilename>" << endl;
+    getline(cin, input);
+
+    for(int i = 0; i < input.length(); i++) {
+        if(isspace(input[i])) {
+            tokens.push_back(token);
+            token = "";
+            continue;
+        }
+        token = token + input[i];
+    }
+    if(token.length() != 0) {
+        tokens.push_back(token);
+    }
+
+    if(tokens.size() < 2) {
+        cerr << "Error: key file not read, not enough arguments." << endl;
+        cerr << tokens.at(0) << endl;
+        return;
+    }
+
+    accountId = tokens.at(0);
+    filename = tokens.at(1);
+
+    if(tokens.size() > 2) {
+        string excessTokens = "";
+        for(int i = 2; i < tokens.size(); i++) {
+            excessTokens = excessTokens + " " + tokens.at(i);
+        }
+        cerr << "Warning: too many tokens provided." << endl;
+        cerr << "<accountId> " << accountId << endl;
+        cerr << "<keyFilename> " << filename << endl;
+        cerr << "Excess tokens: " << excessTokens << endl;
+        cerr << "File will be read using the accountId and keyFilename" << endl;
+    }
+    FILE* fp = fopen(filename.c_str(), "r");
+    if(fp == NULL) {
+        cerr << "Error: Public key " << accountId << " " << filename << " not read" << endl;
+        return;
+    }
+
+    pkey = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
+    if(pkey == NULL) {
+        cerr << "Error: Public key " << accountId << " " << filename << " not read" << endl;
+        return;
+    }
+    fclose(fp);
+
+    if (accCryptoKeys->find(accountId) == accCryptoKeys->end()) {
+        accCryptoKeys->insert(pair<string, EVP_PKEY*>(accountId, pkey));
+    } else {
+        cerr << "Warning: overwitten previously set public key for " << accountId << endl;
+        accCryptoKeys->at(accountId) = pkey;
+    }
+    if (verbose) cout << "Added public key " << accCryptoKeys->at(accountId) << endl;
 }

@@ -12,6 +12,7 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <openssl/rsa.h>
 
 struct utxo {
   std::string transactionId;
@@ -35,6 +36,7 @@ struct transaction{
 class Ledger {
 
 typedef std::unordered_map<std::string, transaction> transactionMap;
+ typedef std::unordered_map<std::string, RSA*> accountCryptoKeys;
 
 public:
   Ledger();
