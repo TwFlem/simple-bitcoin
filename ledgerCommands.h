@@ -12,5 +12,6 @@ void dump(Ledger*, bool, bool);
 void balance(Ledger*, bool, bool);
 void output(Ledger*);
 void readKeyFile(std::unordered_map<std::string, EVP_PKEY*>*, bool, bool);
+void checkSignature(Ledger*, std::unordered_map<std::string, EVP_PKEY*>);
 
 #endif

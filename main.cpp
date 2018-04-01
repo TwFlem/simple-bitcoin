@@ -51,6 +51,8 @@ int main() {
             output(ledger);
         } else if (input == "R" || input == "r") {
             readKeyFile(&accCryptoKeys, interactive, verbose);
+        } else if (input == "C" || input == "c") {
+            checkSignature(ledger, accCryptoKeys);
         } else {
             promptHelp(input);
         }

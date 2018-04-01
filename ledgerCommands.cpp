@@ -2,9 +2,13 @@
 #include <stdio.h>
 #include <fstream>
 #include <utility>
-#include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
+#include <openssl/objects.h>
+#include <openssl/x509.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
 #include "ledgerCommands.h"
 #include "descriptions.h"
 #include "ledger.h"
@@ -82,6 +86,7 @@ void file(Ledger* ledger, bool interactive, bool verbose) {
 
 void transaction(Ledger* ledger, bool interactive, bool verbose) {
     string trans;
+    string sig;
 
     if (interactive) cout << "Enter a transaction:" << endl;
 
@@ -91,6 +96,18 @@ void transaction(Ledger* ledger, bool interactive, bool verbose) {
 
     if(newTrans.id == "") {
         return;
+    }
+
+    getline(cin, sig);
+
+    if(sig.length() > 0) {
+        if(isHex(sig)) {
+            newTrans.signature = sig;
+        } else {
+            cerr << "Error: A valid hexadecimal encoded string must be used for a transaction's signature" << endl;
+            cerr << "Transaction not accepted" << endl;
+            return;
+        }
     }
 
     ledger->addTransaction(newTrans, verbose);
@@ -196,4 +213,66 @@ void readKeyFile(unordered_map<string, EVP_PKEY*>* accCryptoKeys, bool interacti
         accCryptoKeys->at(accountId) = pkey;
     }
     if (verbose) cout << "Added public key " << accCryptoKeys->at(accountId) << endl;
+}
+
+void checkSignature(Ledger* ledger, unordered_map<string, EVP_PKEY*> pubKeyMap) {
+    string transId;
+    struct transaction trans;
+
+    getline(cin, transId);
+
+    if(!ledger->getTransaction(transId, trans)) {
+        cerr << "Error: transaction id " << transId << " is not present in the ledger" << endl;
+        cerr << "Bad" << endl;
+        return;
+    }
+
+    if(trans.signature.length() == 0) {
+        cerr << "Error: transaction id " << transId << " does not have a signature" << endl;
+        cerr << "Bad" << endl;
+        return;
+    }
+
+    struct transaction oldTrans;
+
+    ledger->getTransaction(trans.utxos.at(0).transactionId, oldTrans);
+
+    string accountId = oldTrans.accounts.at(trans.utxos.at(0).index).accountId;
+    auto pubKeyPair = pubKeyMap.find(accountId);
+
+    if(pubKeyPair == pubKeyMap.end()) {
+        cerr << "Error: account holder " << accountId << " does not have a public key" << endl;
+        cerr << "Bad" << endl;
+        return;
+    }
+    EVP_PKEY* pkey = pubKeyPair->second;
+    string transactionSig = trans.signature;
+    string transHashStr = "3; (4787df35, 1)(84dfb9b3, 1)(f684500f, 0); 4; (Marry, 400)(Alice, 400)(Puck, 135)(Gopesh, 5)\n";
+
+    unsigned char *transig = new unsigned char[transactionSig.length()];
+    strcpy((char *)transig,transactionSig.c_str());
+
+    unsigned char *transHashData = new unsigned char[transHashStr.length()];
+    strcpy((char *)transHashData,transHashStr.c_str());
+
+
+    int err;
+    int sig_len = strlen((char*)transig);
+    int transHashStrLen = strlen((char*)transHashData);
+    EVP_MD_CTX* md_ctx = EVP_MD_CTX_create();
+    cout << sig_len << endl;
+    cout << transHashStrLen << endl;
+
+    EVP_VerifyInit (md_ctx, EVP_sha256());
+    EVP_VerifyUpdate (md_ctx, transHashData, transHashStrLen);
+    err = EVP_VerifyFinal (md_ctx, transig, sig_len, pkey);
+    EVP_PKEY_free (pkey);
+
+    if (err != 1) {
+        ERR_print_errors_fp(stderr);
+        cerr << "Bad" << endl;
+        return;
+    }
+
+    cout << "OK" << endl;
 }
